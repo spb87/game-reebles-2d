@@ -31,13 +31,13 @@ The greybox walking skeleton builds to the Web platform in batch mode and is ser
 
 | Jira | Summary | Status | Depends on |
 |------|---------|--------|------------|
-| REEB-137 | TASK-11: Web build pipeline + local serve verify | ⏳ To Do | REEB-136 |
-| REEB-138 | TASK-12: GitHub repo + Pages deploy | ⏳ To Do | REEB-137 |
+| REEB-137 | TASK-11: Web build pipeline + local serve verify | ✅ Done | REEB-136 |
+| REEB-138 | TASK-12: GitHub repo + Pages deploy | ✅ Done | REEB-137 |
 
 ## Status
 
 - [x] Spec complete
 - [x] Tasks decomposed
 - [x] Cost estimated
-- [ ] All tasks done
-- [ ] Feature verified
+- [x] All tasks done
+- [x] Feature verified — live: https://spb87.github.io/game-reebles-2d/

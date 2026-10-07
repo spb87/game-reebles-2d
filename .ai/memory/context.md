@@ -4,9 +4,9 @@ Current state of the project. Updated by the Architect after each completed task
 
 ## Current state
 
-Bootstrapped 2026-10-07. Framework docs filled (project-brief, stack, conventions, decisions DEC-1..10), epic `reebles-2d-mvp` created with 5 milestones, M1 decomposed into 3 features / 12 tasks. **M1 F1 (repo+toolchain scaffold) and F2 (greybox scene + player movement) are complete** — awaiting user check-in at the feature boundary; next is F3 (REEB-126: Web smoke build + GitHub Pages deploy).
+Bootstrapped 2026-10-07. Framework docs filled (project-brief, stack, conventions, decisions DEC-1..10), epic `reebles-2d-mvp` created with 5 milestones. **MILESTONE 1 (walking skeleton) is COMPLETE** — greybox game live at https://spb87.github.io/game-reebles-2d/ (public repo `spb87/game-reebles-2d`). Pausing at the M1 boundary for user go/no-go; next is M2 (vertical slice: one quest end-to-end) — decompose only after review.
 
-**Task management: Jira mode** (DEC-10). Epic REEB-123 (In Progress) → Stories REEB-124 (F1, Done), REEB-125 (F2, Done), REEB-126 (F3, To Do) → Subtasks REEB-127…138 (TASK-1…12; 127–136 Done, 137–138 To Do). `active.md`/`bugs/open.md` are Jira-synced snapshots; `backlog.md`/`done.md` archived to `.ai/tasks/archive/pre-jira-migration/`. Atlassian MCP at local scope (`.devin/mcp_config.local.json`, gitignored), OAuth cached from the 3D project.
+**Task management: Jira mode** (DEC-10). Epic REEB-123 → Stories REEB-124/125/126 all Done → Subtasks REEB-127…138 all Done (TASK-1…12). `active.md`/`bugs/open.md` are Jira-synced snapshots; `backlog.md`/`done.md` archived to `.ai/tasks/archive/pre-jira-migration/`. Atlassian MCP at local scope (`.devin/mcp_config.local.json`, gitignored).
 
 ## What works
 
@@ -20,10 +20,12 @@ Bootstrapped 2026-10-07. Framework docs filled (project-brief, stack, convention
 - `VillageSceneBuilder.Build` (idempotent, `-executeMethod`): generates greybox sprites → `Player.prefab` (SpriteRenderer + kinematic RB + CircleCollider2D + PlayerMovement wired) → `Village.unity` (30×20 ground, 5 blocking buildings, fountain, 4-sided fence colliders, CinemachineCamera + Confiner2D on trigger CameraBounds, MobileControls canvas + EventSystem)
 - Tests green: EditMode 7/7 (`MovementMathTests` + sanity), PlayMode 4/4 (movement, wall-blocking via Slide, run, on-screen controls bound to Player map)
 - Batch pipeline proven: `Unity.exe -batchmode -projectPath 'C:\Source\game-reebles-2d\game' -executeMethod ... -quit -logFile X.log` works from WSL
+- WebGL pipeline: `WebBuild.Build` → `game/Builds/Web` (compression Disabled — Pages CDN compresses in transit); `tools/deploy-pages.py` — idempotent deploy to `gh-pages` branch + Pages enable + propagation poll
+- **DEPLOYED**: https://spb87.github.io/game-reebles-2d/ — public, HTTP 200, `.nojekyll` on gh-pages
 
 ## What's in progress
 
-- Nothing — M1 Feature 2 boundary pause; F3 = REEB-126 (Web smoke build → GitHub Pages deploy, REEB-137/138) on go-ahead
+- Nothing — M1 boundary pause; M2 vertical-slice decomposition awaits go/no-go
 
 ## What's blocked
 

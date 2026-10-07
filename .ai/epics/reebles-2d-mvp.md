@@ -18,7 +18,7 @@ A cozy top-down 2D errand game running on a public URL in any browser: the playe
 - **Proves**: Unity-on-WSL batch pipeline, URP 2D setup, Input System desktop+mobile, Web build → GitHub Pages deploy path. Hosting is proven before any art is spent (scope pillar 1: a live URL early, not deferred).
 - **Features**: `m1-repo-toolchain-scaffold.md`, `m1-greybox-scene-movement.md`, `m1-web-smoke-deploy.md`
 - **Estimated cost**: see `.ai/costs/estimates.md`
-- **Status**: in progress
+- **Status**: ✅ complete — live at https://spb87.github.io/game-reebles-2d/ (all REEB-127…138 Done)
 
 ### Milestone 2: Core loop vertical slice
 
