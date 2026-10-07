@@ -106,7 +106,9 @@ def enable_pages() -> None:
     # 409 = site already enabled — confirm it points at gh-pages via GET.
     if result.returncode != 0 and "already enabled" not in result.stderr + result.stdout:
         raise RuntimeError("failed to enable GitHub Pages")
-    run([gh(), "api", f"repos/{REPO}/pages", "-q", ".html_url + ' <- ' + .source.branch"])
+    # jq only accepts double-quoted strings — the docs' single-quote style is
+    # shell quoting, not jq syntax, and fails when passed via subprocess argv.
+    run([gh(), "api", f"repos/{REPO}/pages", "-q", '.html_url + " <- " + .source.branch'])
 
 
 def main() -> int:

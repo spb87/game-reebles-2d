@@ -43,7 +43,7 @@ namespace Reebles2D.Editor
         private const float FountainPpu = 400f;   // ~2.6 units
         private const float FencePpu = 256f;      // ~4 units per tile
         private const float LanternPpu = 512f;    // ~2 units
-        private const float GroundPpu = 256f;     // ~4 units per grass tile
+        private const float GroundPpu = 256f;     // backdrop is stretched to map bounds; PPU only sets import scale
         private const float ReeblePpu = 512f;     // 256x512 cell -> 0.5 x 1 unit
 
         // Colliders cover only the base of each sprite (doors/water/fence rails),
@@ -54,6 +54,7 @@ namespace Reebles2D.Editor
 
         private static readonly Rect MapBounds = new Rect(-15f, -10f, 30f, 20f);
         private const float FenceThickness = 0.3f;
+        private const float FenceSegmentHeight = 1f;
 
         private const float ControlEdgeOffset = 160f;
         private const float ControlAreaSize = 220f;
@@ -71,7 +72,7 @@ namespace Reebles2D.Editor
             EnsureFolder("Assets", "Scenes");
 
             Sprite groundSprite = EnsureSpriteImport(
-                BackdropsFolder + "/ground_grass.jpg", GroundPpu, alpha: false);
+                BackdropsFolder + "/village_ground.jpg", GroundPpu, alpha: false);
             Sprite bakerySprite = EnsureSpriteImport(
                 SpritesFolder + "/building_bakery.png", BuildingPpu);
             Sprite smithySprite = EnsureSpriteImport(
@@ -99,13 +100,10 @@ namespace Reebles2D.Editor
                 NewSceneSetup.EmptyScene, NewSceneMode.Single);
             scene.name = "Village";
 
-            GameObject ground = new GameObject("Ground");
-            ground.transform.position = MapBounds.center;
-            SpriteRenderer groundRenderer = ground.AddComponent<SpriteRenderer>();
-            groundRenderer.sprite = groundSprite;
-            groundRenderer.drawMode = SpriteDrawMode.Tiled;
-            groundRenderer.size = new Vector2(MapBounds.width, MapBounds.height);
-            groundRenderer.sortingOrder = -10;
+            // Single stretched backdrop — the art is a full-map painting, not a
+            // tile, so Tiled drawMode would repeat the whole scene.
+            CreateScaledSprite("Ground", groundSprite, MapBounds.center,
+                new Vector2(MapBounds.width, MapBounds.height), sortingOrder: -10);
 
             CreateBuilding("Bakery", bakerySprite, new Vector2(-8f, 5f), new Vector2(4f, 4f));
             CreateBuilding("Smithy", smithySprite, new Vector2(-8f, -5f), new Vector2(4f, 4f));
@@ -339,40 +337,82 @@ namespace Reebles2D.Editor
             CreateScaledSprite("Lantern", sprite, position, Vector2.one * 1f, sortingOrder: 1);
         }
 
+        /// <summary>
+        /// Rings the map with discrete fence-segment sprites scaled to
+        /// <see cref="FenceSegmentHeight"/> tall (horizontal art is reused rotated
+        /// 90 degrees on the vertical edges). Collision stays on four thin
+        /// strips so segment spacing cannot open gaps.
+        /// </summary>
         private static void BuildFence(Sprite fenceSprite)
         {
             GameObject fenceRoot = new GameObject("Fence");
             float halfWidth = MapBounds.width * 0.5f;
             float halfHeight = MapBounds.height * 0.5f;
-            Vector2[] centers =
-            {
-                new Vector2(MapBounds.center.x, halfHeight),
-                new Vector2(MapBounds.center.x, -halfHeight),
-                new Vector2(-halfWidth, MapBounds.center.y),
-                new Vector2(halfWidth, MapBounds.center.y),
-            };
-            Vector2[] sizes =
-            {
-                new Vector2(MapBounds.width + FenceThickness, FenceThickness),
-                new Vector2(MapBounds.width + FenceThickness, FenceThickness),
-                new Vector2(FenceThickness, MapBounds.height + FenceThickness),
-                new Vector2(FenceThickness, MapBounds.height + FenceThickness),
-            };
-            string[] names = { "FenceNorth", "FenceSouth", "FenceWest", "FenceEast" };
 
-            for (int i = 0; i < centers.Length; i++)
+            Vector2 spriteSize = fenceSprite.bounds.size;
+            float segmentScale = FenceSegmentHeight / spriteSize.y;
+            float segmentWidth = spriteSize.x * segmentScale;
+
+            LayFenceEdge(fenceRoot.transform, fenceSprite, "FenceNorth",
+                new Vector2(-halfWidth, halfHeight), Vector2.right,
+                MapBounds.width, segmentWidth, segmentScale, rotateVertical: false);
+            LayFenceEdge(fenceRoot.transform, fenceSprite, "FenceSouth",
+                new Vector2(-halfWidth, -halfHeight), Vector2.right,
+                MapBounds.width, segmentWidth, segmentScale, rotateVertical: false);
+            LayFenceEdge(fenceRoot.transform, fenceSprite, "FenceWest",
+                new Vector2(-halfWidth, -halfHeight), Vector2.up,
+                MapBounds.height, segmentWidth, segmentScale, rotateVertical: true);
+            LayFenceEdge(fenceRoot.transform, fenceSprite, "FenceEast",
+                new Vector2(halfWidth, -halfHeight), Vector2.up,
+                MapBounds.height, segmentWidth, segmentScale, rotateVertical: true);
+
+            CreateFenceCollider(fenceRoot.transform, "FenceNorthCollider",
+                new Vector2(MapBounds.center.x, halfHeight),
+                new Vector2(MapBounds.width + FenceThickness, FenceThickness));
+            CreateFenceCollider(fenceRoot.transform, "FenceSouthCollider",
+                new Vector2(MapBounds.center.x, -halfHeight),
+                new Vector2(MapBounds.width + FenceThickness, FenceThickness));
+            CreateFenceCollider(fenceRoot.transform, "FenceWestCollider",
+                new Vector2(-halfWidth, MapBounds.center.y),
+                new Vector2(FenceThickness, MapBounds.height + FenceThickness));
+            CreateFenceCollider(fenceRoot.transform, "FenceEastCollider",
+                new Vector2(halfWidth, MapBounds.center.y),
+                new Vector2(FenceThickness, MapBounds.height + FenceThickness));
+        }
+
+        /// <summary>
+        /// Places whole fence segments end to end from <paramref name="start"/>
+        /// along <paramref name="direction"/>. Vertical runs reuse the same art
+        /// rotated upright so the pickets stay vertical.
+        /// </summary>
+        private static void LayFenceEdge(Transform parent, Sprite fenceSprite,
+            string name, Vector2 start, Vector2 direction, float length,
+            float segmentWidth, float segmentScale, bool rotateVertical)
+        {
+            int count = Mathf.Max(1, Mathf.CeilToInt(length / segmentWidth));
+            float step = length / count;
+            float angle = rotateVertical ? 90f : 0f;
+            for (int i = 0; i < count; i++)
             {
-                GameObject segment = new GameObject(names[i]);
-                segment.transform.position = centers[i];
-                segment.transform.SetParent(fenceRoot.transform);
+                GameObject segment = new GameObject(name + "_" + i);
+                segment.transform.SetParent(parent);
+                segment.transform.position = start + direction * (step * (i + 0.5f));
+                segment.transform.rotation = Quaternion.Euler(0f, 0f, angle);
+                segment.transform.localScale = Vector3.one * segmentScale;
                 SpriteRenderer renderer = segment.AddComponent<SpriteRenderer>();
                 renderer.sprite = fenceSprite;
-                renderer.drawMode = SpriteDrawMode.Tiled;
-                renderer.size = sizes[i];
                 renderer.sortingOrder = 0;
-                BoxCollider2D collider = segment.AddComponent<BoxCollider2D>();
-                collider.size = sizes[i];
             }
+        }
+
+        private static void CreateFenceCollider(Transform parent, string name,
+            Vector2 center, Vector2 size)
+        {
+            GameObject strip = new GameObject(name);
+            strip.transform.SetParent(parent);
+            strip.transform.position = center;
+            BoxCollider2D collider = strip.AddComponent<BoxCollider2D>();
+            collider.size = size;
         }
 
         private static void BuildMobileControls(Sprite sprite)
