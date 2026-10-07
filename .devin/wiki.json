@@ -1,0 +1,39 @@
+{
+  "repo_notes": [
+    {
+      "content": "This repository uses a multi-agent development framework. The .ai/ directory contains all shared project memory: task tracking (tasks/), architectural decisions (memory/decisions.md), project state (memory/context.md), tech stack (memory/stack.md), feature specs (features/), bug tracking (bugs/), and cost tracking (costs/). The .devin/ directory holds the Devin wiring: an always-on mode router (rules/agent-workflow.md) and the developer subagent profile (agents/developer.md).",
+      "author": "Project Setup"
+    },
+    {
+      "content": "Agent roles: in autonomous mode a single orchestrator session (frontier model) performs Architect duties and dispatches one developer subagent per task (pinned cheaper model); in supervised mode the user pastes .ai/roles/architect.md or developer.md into separate sessions. The Architect contract lives in .ai/roles/ — decomposition, reviews, all .ai/ writes — and the Developer contract is .ai/roles/developer.md, executed verbatim by the subagent.",
+      "author": "Project Setup"
+    }
+  ],
+  "pages": [
+    {
+      "title": "Project Overview",
+      "purpose": "High-level summary of the project purpose, target users, and current milestone status. Derived from .ai/config/project-brief.md and .ai/memory/context.md.",
+      "parent": null
+    },
+    {
+      "title": "Tech Stack",
+      "purpose": "Document the technology stack with exact versions, package managers, and key dependencies. Derived from .ai/memory/stack.md.",
+      "parent": null
+    },
+    {
+      "title": "Architecture Decisions",
+      "purpose": "Document all architectural decisions, their rationale, and consequences. Derived from .ai/memory/decisions.md.",
+      "parent": null
+    },
+    {
+      "title": "Agent Workflow",
+      "purpose": "Document the multi-agent workflow: how the orchestrator and Developer roles interact in autonomous and supervised modes, how tasks flow from backlog to done, and how the .ai/ memory layer works.",
+      "parent": null
+    },
+    {
+      "title": "Coding Conventions",
+      "purpose": "Document coding standards, testing frameworks, documentation style, and dependency management rules. Derived from .ai/config/conventions.md.",
+      "parent": "Tech Stack"
+    }
+  ]
+}

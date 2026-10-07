@@ -1,0 +1,29 @@
+{
+  "mcpServers": {
+    "replace-with-your-mcp-servers": {
+      "_comment": "Add your MCP server configurations here. Examples below.",
+      "_example_jira": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "@modelcontextprotocol/server-atlassian"
+        ],
+        "env": {
+          "ATLASSIAN_API_TOKEN": "your-token-here",
+          "ATLASSIAN_EMAIL": "your-email@example.com",
+          "ATLASSIAN_BASE_URL": "https://your-org.atlassian.net"
+        }
+      },
+      "_example_github": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "@modelcontextprotocol/server-github"
+        ],
+        "env": {
+          "GITHUB_TOKEN": "your-token-here"
+        }
+      }
+    }
+  }
+}

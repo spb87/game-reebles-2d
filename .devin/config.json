@@ -1,0 +1,5 @@
+{
+  "subagents_enabled": true,
+  "_comment_subagents": "Set subagents_enabled to false to hard-remove subagent tools (kill-switch for misbehaving subagents). The softer workflow-level fallback is 'Subagents: false' in .ai/config/agent-mode.md.",
+  "_comment_local": "Machine-local or secret-bearing MCP config can live in .devin/mcp_config.local.json instead of this committed file."
+}
