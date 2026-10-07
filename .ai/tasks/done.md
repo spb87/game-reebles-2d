@@ -2,6 +2,29 @@
 
 ---
 
+### TASK-3: Repo tools + README
+
+- **Feature**: m1-repo-toolchain-scaffold.md
+- **Role**: Developer
+- **Status**: done
+
+```
+COMPLETION REPORT:
+- Task: TASK-3
+- Status: complete
+- Files modified: `tools/run-unity.bat`, `tools/serve-webgl.py`, `README.md`
+- What was done: Ported `run-unity.bat` verbatim from the sibling repo (points at pinned editor 6000.3.24f1); ported `serve-webgl.py` — its default `--dir` was already `game/Builds/Web`, matching the required change. Wrote a root `README.md` covering project name/one-liner, prerequisites (Unity 6000.3.24f1 on Windows, Python 3.10+), `.env` setup via `.env.example`, opening `game/` in Unity, the batch `-runTests` command, the serve command for `game/Builds/Web` (build task deferred to TASK-11), and the GitHub Pages deploy note referencing DEC-3.
+- How to verify: `python3 tools/serve-webgl.py --help` → exits 0 (verified); `grep 6000.3.24f1 tools/run-unity.bat` → match (verified); `README.md` names test, build/serve, and deploy commands.
+- Observations: `run-unity.bat` echoes `UNITY_EXIT=%ERRORLEVEL%` but never propagates a non-zero exit code itself — carried over verbatim from the 3D repo per task spec; may matter if batch-mode callers rely on the exit code rather than parsing output.
+- Follow-up tasks suggested: none
+- Clarity checkpoint: all 5 passed
+- Git commit: `490bf2e chore(TASK-3): add repo tools (run-unity, serve-webgl) and README`
+```
+
+**Review**: Verified — serve-webgl `--help` exits 0, run-unity.bat pins the right editor, README covers setup/test/build/deploy. Observation noted: callers should parse `UNITY_EXIT=` from output rather than trust the .bat's exit code (Tasks 4-12 invoke `Unity.exe` directly anyway, so no impact).
+
+---
+
 ### TASK-2: Art pipeline port
 
 - **Feature**: m1-repo-toolchain-scaffold.md

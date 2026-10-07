@@ -35,7 +35,7 @@ Units of work waiting to be picked up. The Architect moves one task at a time to
 - **Exit criteria**: `python3 tools/serve-webgl.py --help` exits 0; `README.md` exists and names all required commands; `tools/run-unity.bat` contains `6000.3.24f1`.
 - **Max new lines**: ~160
 - **Dependencies**: TASK-1
-- **Status**: backlog
+- **Status**: done → see `done.md` (commit 490bf2e)
 
 ### TASK-4: Unity project creation + packages
 
