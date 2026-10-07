@@ -24,7 +24,7 @@ Units of work waiting to be picked up. The Architect moves one task at a time to
 - **Exit criteria**: `python3 art/tools/gen_image.py --help` exits 0; `test -s art/style-anchor.txt`; `git check-ignore art/staging/x.png` exits 0.
 - **Max new lines**: ~150 (mostly copied file)
 - **Dependencies**: TASK-1 (gitignore must exist)
-- **Status**: backlog
+- **Status**: done → see `done.md` (commit 6d1c5a1)
 
 ### TASK-3: Repo tools + README
 
