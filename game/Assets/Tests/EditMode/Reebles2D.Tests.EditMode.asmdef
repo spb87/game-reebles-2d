@@ -1,0 +1,25 @@
+{
+    "name": "Reebles2D.Tests.EditMode",
+    "rootNamespace": "Reebles2D.Tests.EditMode",
+    "references": [
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "includeDependencies": [],
+    "referencesAssembliesAndCustomAssemblies": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

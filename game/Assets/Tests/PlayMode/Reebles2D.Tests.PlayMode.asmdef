@@ -1,0 +1,23 @@
+{
+    "name": "Reebles2D.Tests.PlayMode",
+    "rootNamespace": "Reebles2D.Tests.PlayMode",
+    "references": [
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "includeDependencies": [],
+    "referencesAssembliesAndCustomAssemblies": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
