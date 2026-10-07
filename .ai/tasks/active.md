@@ -4,15 +4,15 @@ Jira-synced snapshot (Mode: jira — DEC-10). The Architect writes the current t
 
 ---
 
-### REEB-137: Web build pipeline + local serve verify
+### REEB-138: GitHub repo + Pages deploy
 
 - **Feature**: REEB-126 (`m1-web-smoke-deploy.md`)
 - **Role**: Developer
-- **Files allowed**: `game/Assets/Editor/WebBuild.cs`, `game/ProjectSettings/ProjectSettings.asset` (compression/productName), `README.md` (build/serve section)
-- **Input**: `Reebles2D.Editor.WebBuild.Build()` — `BuildPipeline.BuildPlayer` for `BuildTarget.WebGL`; set `PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Disabled` (GitHub Pages' CDN applies transport compression itself; Unity's `.br` precompressed files need `Content-Encoding` Pages won't emit — see feature spec; revisit at M5), `productName = "Reebles 2D"`, scenes = `Assets/Scenes/Village.unity` (run `VillageSceneBuilder.Build` as a prior batch step if the scene is missing — do NOT call it inside Build), output `game/Builds/Web`. Invoke with `-buildTarget WebGL` so platform defines are right. Then serve `python3 tools/serve-webgl.py --dir game/Builds/Web --port 8080` and `curl -sI localhost:8080/` → 200; report `du -sh game/Builds/Web` in the completion report.
-- **Exit criteria**: `test -f game/Builds/Web/index.html`; `curl -sI http://localhost:8080/ | head -1` = 200; build size reported; no `error CS` in the build log.
-- **Max new lines**: ~90
-- **Dependencies**: REEB-136 (done)
+- **Files allowed**: `tools/deploy-pages.py`, `README.md` (deploy section) — plus authorized remote side effects: `gh.exe repo create`, `git remote add`, `git push` to `spb87/game-reebles-2d`
+- **Input**: `tools/deploy-pages.py` (stdlib Python; `gh` is Windows-side → invoke `gh.exe` via WSL interop). Steps: (1) `gh.exe repo create spb87/game-reebles-2d --public --source . --remote origin --push` (pushes `main`); (2) stage `game/Builds/Web/*` into orphan `gh-pages` branch (git worktree or temp clone), add `.nojekyll`, commit, push; (3) `gh.exe api repos/spb87/game-reebles-2d/pages -X POST -f "source[branch]=gh-pages" -f "source[path]=/"` enables Pages; (4) poll `curl -sI https://spb87.github.io/game-reebles-2d/` for 200 (propagation may take minutes — report URL even if pending, with the exact check command).
+- **Exit criteria**: `git ls-remote origin gh-pages` lists a commit; `curl -sI https://spb87.github.io/game-reebles-2d/ | head -1` → 200 (or pending-propagation note + check command); repo public; `.nojekyll` on gh-pages.
+- **Max new lines**: ~160
+- **Dependencies**: REEB-137 (done — `game/Builds/Web` already built)
 - **Status**: in progress
-- **Git**: `feat(REEB-137): add Web build pipeline (WebBuild.cs) + build docs`
-- **Note**: the WebGL build can take many minutes on first run (il2cpp codegen) — keep the Unity process running until it exits; don't kill it early.
+- **Git**: `feat(REEB-138): add GitHub Pages deploy tooling`, plus first live deploy.
+- **Pre-flight check**: before pushing, `git ls-files | grep -iE '\.env$|secret|key'` must return nothing sensitive — the repo is going PUBLIC. `.env` is gitignored but verify anyway.
