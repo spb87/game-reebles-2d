@@ -32,10 +32,23 @@ From WSL, invoke the editor via the full `/mnt/c/...` path with Windows-style `-
 
 ## Build and serve locally
 
+Build a WebGL player into `game/Builds/Web` (gitignored) in batch mode:
+
 ```
-# Build a WebGL build into game/Builds/Web (build task pending — see TASK-11)
-# Then serve the Brotli-compressed build:
-python3 tools/serve-webgl.py            # serves game/Builds/Web on :8080
+# Windows cmd
+tools\run-unity.bat -batchmode -nographics -buildTarget WebGL -projectPath C:\Source\game-reebles-2d\game -executeMethod Reebles2D.Editor.WebBuild.Build -quit
+
+# WSL
+"/mnt/c/Program Files/Unity/Hub/Editor/6000.3.24f1/Editor/Unity.exe" -batchmode -nographics -buildTarget WebGL -projectPath 'C:\Source\game-reebles-2d\game' -executeMethod Reebles2D.Editor.WebBuild.Build -quit
+```
+
+The first build runs IL2CPP codegen and can take 10–30+ minutes. Compression is disabled (`WebGLCompressionFormat.Disabled`) because GitHub Pages' CDN applies transport compression itself.
+
+Then serve the build and verify it responds:
+
+```
+python3 tools/serve-webgl.py --dir game/Builds/Web --port 8080
+curl -sI http://localhost:8080/        # expect HTTP/1.0 200
 ```
 
 ## Deployment
