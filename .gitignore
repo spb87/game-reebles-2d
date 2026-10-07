@@ -61,6 +61,8 @@ unity-*.log
 # Unity test results
 *-results.xml
 *_results.xml
+em.xml
+pm.xml
 game/TestResults/
 testresults/
 PerformanceTestRun*.json
