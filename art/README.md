@@ -25,12 +25,13 @@ All game art is generated via the RouteLLM image API using `art/tools/gen_image.
 
 - `seedream` — default for general assets (cheap, fast)
 - `nano_banana_pro` / `gpt_image25` — hero shots and showcase pieces
+- `recraft` — **preferred when transparent background matters** (per `gen-2d-ai.md`)
 - `*_edit` variants — iteration on an existing image
-- Other ids available: `flux2_pro`, `recraft`, `ideogram45`
+- Other ids available: `flux2_pro`, `ideogram45`
 - `--image-config '{"aspect_ratio":"1:1"}'` passes raw config through to the API
 
 ## Open question: alpha/transparency
 
-Whether RouteLLM models can emit sprites with a usable alpha channel is
-unverified. A 3-call experiment is deferred to the first M3 asset task.
-Do NOT run generations as part of pipeline setup.
+`recraft` (or `gpt_image25`) reportedly emits usable transparent backgrounds;
+the fallback is a flat solid background + chroma-key. Settled by the 3-call
+experiment in the first art-pass task.
