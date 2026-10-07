@@ -1,0 +1,66 @@
+# game-reebles-2d repo hygiene — Unity generated artifacts and local config
+
+# Unity generated directories
+game/Library/
+game/Temp/
+game/Obj/
+game/Build/
+game/Builds/
+game/Logs/
+game/UserSettings/
+game/MemoryCaptures/
+game/Assets/AssetStoreTools*
+
+# Visual Studio / IDE generated files
+*.csproj
+*.sln
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+.vs/
+.idea/
+.vscode/
+
+# Unity crash / memory capture artifacts
+crashlytics-build.properties
+sysinfo.txt
+*.stackdump
+ExportedObj/
+.consulo/
+*.apk
+*.aab
+*.unitypackage
+*.app
+
+# Art staging — regenerable intermediates from the image-gen pipeline;
+# only promoted assets under game/Assets/Art/ are committed
+art/staging/
+__pycache__/
+*.pyc
+
+# OS noise
+.DS_Store
+Thumbs.db
+
+# Environment / secrets / machine-local config
+.env
+.env.local
+.devin/mcp_config.local.json
+
+# Build / batch verification logs
+unity-*.log
+*.log
+
+# Unity test results
+*-results.xml
+*_results.xml
+game/TestResults/
+testresults/
+PerformanceTestRun*.json
