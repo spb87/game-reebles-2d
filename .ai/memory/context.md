@@ -4,9 +4,9 @@ Current state of the project. Updated by the Architect after each completed task
 
 ## Current state
 
-Bootstrapped 2026-10-07. Framework docs filled (project-brief, stack, conventions, decisions DEC-1..10), epic `reebles-2d-mvp` created with 5 milestones. **MILESTONE 1 (walking skeleton) is COMPLETE** — greybox game live at https://spb87.github.io/game-reebles-2d/ (public repo `spb87/game-reebles-2d`). Pausing at the M1 boundary for user go/no-go; next is M2 (vertical slice: one quest end-to-end) — decompose only after review.
+Bootstrapped 2026-10-07. Framework docs filled (project-brief, stack, conventions, decisions DEC-1..10), epic `reebles-2d-mvp` created with 5 milestones. **MILESTONE 1 (walking skeleton) COMPLETE + first art pass done** — painterly art live at https://spb87.github.io/game-reebles-2d/ (public repo `spb87/game-reebles-2d`). Next: M2 (vertical slice: one quest end-to-end) — decompose only after review.
 
-**Task management: Jira mode** (DEC-10). Epic REEB-123 → Stories REEB-124/125/126 all Done → Subtasks REEB-127…138 all Done (TASK-1…12). `active.md`/`bugs/open.md` are Jira-synced snapshots; `backlog.md`/`done.md` archived to `.ai/tasks/archive/pre-jira-migration/`. Atlassian MCP at local scope (`.devin/mcp_config.local.json`, gitignored).
+**Task management: Jira mode** (DEC-10). Epic REEB-123 → Stories REEB-124/125/126/139 all Done → Subtasks REEB-127…138, REEB-140/141 all Done. `active.md`/`bugs/open.md` are Jira-synced snapshots; `backlog.md`/`done.md` archived to `.ai/tasks/archive/pre-jira-migration/`. Atlassian MCP at local scope (`.devin/mcp_config.local.json`, gitignored).
 
 ## What works
 
@@ -17,15 +17,16 @@ Bootstrapped 2026-10-07. Framework docs filled (project-brief, stack, convention
 - Unity project `game/`: Unity 6000.3.24f1, URP 17.3.0 + InputSystem 1.14.0 + Cinemachine 3.1.2 + 2D sprite/tilemap packages; `activeInputHandler: 1`; URP 2D pipeline assets in `Assets/Settings/` assigned to Graphics + all Quality levels
 - Game code: `Reebles2D.Player` asmdef — `MovementMath.ComputeVelocity` (deadzone, diagonal-normalized) + `PlayerMovement` (kinematic `Rigidbody2D.Slide`, `[SerializeField]` walkSpeed/runMultiplier, reads actions from serialized `InputActionAsset`); `Reebles2D.UI` asmdef — `MobileControlsHud` (touch-gated via `Input.touchSupported`, safe-area pinned)
 - `ReeblesInput.inputactions`: Player map — Move (WASD/arrows/gamepad leftStick), Run (shift×2/gamepadSouth, Hold), Interact (E/gamepadEast); gamepad paths double as the on-screen control paths
-- `VillageSceneBuilder.Build` (idempotent, `-executeMethod`): generates greybox sprites → `Player.prefab` (SpriteRenderer + kinematic RB + CircleCollider2D + PlayerMovement wired) → `Village.unity` (30×20 ground, 5 blocking buildings, fountain, 4-sided fence colliders, CinemachineCamera + Confiner2D on trigger CameraBounds, MobileControls canvas + EventSystem)
+- `VillageSceneBuilder.Build` (idempotent, `-executeMethod`): sets sprite imports + slices `reeble_sheet` → `Player.prefab` (SpriteRenderer + kinematic RB + CircleCollider2D + PlayerMovement wired) → `Village.unity` (30×20 tiled grass backdrop, 5 building sprites w/ footprint colliders, fountain, tiled fence, lanterns, CinemachineCamera + Confiner2D on trigger CameraBounds, MobileControls canvas + EventSystem)
 - Tests green: EditMode 7/7 (`MovementMathTests` + sanity), PlayMode 4/4 (movement, wall-blocking via Slide, run, on-screen controls bound to Player map)
 - Batch pipeline proven: `Unity.exe -batchmode -projectPath 'C:\Source\game-reebles-2d\game' -executeMethod ... -quit -logFile X.log` works from WSL
 - WebGL pipeline: `WebBuild.Build` → `game/Builds/Web` (compression Disabled — Pages CDN compresses in transit); `tools/deploy-pages.py` — idempotent deploy to `gh-pages` branch + Pages enable + propagation poll
+- **Art**: RouteLLM pipeline live — `recraft` = the alpha model (omit `--image-config` for it/gpt_image25, HTTP 400); assets promoted in `Assets/Art/` (5 buildings, fountain, fence, lantern, reeble_sheet 4×2, grass backdrop); VillageSceneBuilder loads real art + sets import settings; prompt records in `art/prompts/`
 - **DEPLOYED**: https://spb87.github.io/game-reebles-2d/ — public, HTTP 200, `.nojekyll` on gh-pages
 
 ## What's in progress
 
-- Nothing — M1 boundary pause; M2 vertical-slice decomposition awaits go/no-go
+- Nothing — M1 + art pass boundary pause; M2 vertical-slice decomposition awaits go/no-go
 
 ## What's blocked
 
