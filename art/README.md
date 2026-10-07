@@ -30,8 +30,31 @@ All game art is generated via the RouteLLM image API using `art/tools/gen_image.
 - Other ids available: `flux2_pro`, `ideogram45`
 - `--image-config '{"aspect_ratio":"1:1"}'` passes raw config through to the API
 
-## Open question: alpha/transparency
+## Alpha/transparency — SETTLED (REEB-140)
 
-`recraft` (or `gpt_image25`) reportedly emits usable transparent backgrounds;
-the fallback is a flat solid background + chroma-key. Settled by the 3-call
-experiment in the first art-pass task.
+**Winner: `recraft`** — emits real RGBA PNGs with transparent corners
+(verified: IHDR color type 6, corner alpha 0-2).
+
+Experiment results (lantern sprite, identical prompt):
+
+| Model | Result |
+|-------|--------|
+| `recraft` | 1024x1024 PNG, color type 6 (RGBA), corner alpha ≈ 0 — transparent |
+| `gpt_image25` | 1024x1024 PNG, color type 2 (RGB), corner alpha 255 — opaque |
+| `seedream` | returned a JPEG — no alpha possible |
+
+Caveats discovered:
+
+- `image_config` (e.g. `--image-config '{"aspect_ratio":"1:1"}'`) causes
+  HTTP 400 on `recraft` and `gpt_image25`. Omit it for those models;
+  default output is 1024x1024 square anyway. `seedream` accepts it.
+- `recraft` is nondeterministic about format: most calls return RGBA PNG,
+  but some return lossless WebP (VP8L) *without* alpha, and one RGBA PNG
+  had a slightly-lit corner (alpha ~23). Always verify alpha on staged
+  files before promoting (see `check_alpha` approach: IHDR color type +
+  corner-pixel alpha; VP8L alpha flag is bit 28 of the 5-byte field after
+  the `VP8L` chunk header).
+- `nano_banana_pro` returned opaque RGB PNG on a transparency prompt.
+
+Rule of thumb: use `recraft` for anything needing transparency; use
+`seedream` for opaque textures/backdrops.
