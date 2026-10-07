@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 2ae77e7a8b9414946a70deb1b52441f4
+guid: 115068b45f59f4640a01e96cead0d667
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -282484070634991080
-    second: building_smithy_0
+      213: 354967697167273106
+    second: UI_Rect_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -51,7 +51,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 250
+  spritePixelsToUnits: 16
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -113,13 +113,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: building_smithy_0
+      name: UI_Rect_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 1024
-        height: 1024
+        width: 16
+        height: 16
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 81258130c3a641cf0800000000000000
-      internalID: -282484070634991080
+      spriteID: 29cc4686d391de400800000000000000
+      internalID: 354967697167273106
       vertices: []
       indices: 
       edges: []

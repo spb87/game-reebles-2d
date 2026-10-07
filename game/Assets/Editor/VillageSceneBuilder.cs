@@ -1,5 +1,7 @@
-// Greybox scene generator: builds the Village scene, Player prefab, and
-// placeholder sprites entirely in code. Run via:
+// Village scene generator: builds the Village scene and Player prefab from the
+// promoted art in Assets/Art (Sprites/ + Backdrops/). A tiny procedural white
+// sprite is still generated under Assets/Art/Greybox for the mobile UI controls.
+// Run via:
 //   Unity.exe -batchmode -nographics -projectPath game \
 //     -executeMethod Reebles2D.Editor.VillageSceneBuilder.Build -quit
 
@@ -7,6 +9,7 @@ using System.IO;
 using Unity.Cinemachine;
 using UnityEditor;
 using UnityEditor.SceneManagement;
+using UnityEditor.U2D.Sprites;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -17,12 +20,14 @@ using UnityEngine.UI;
 namespace Reebles2D.Editor
 {
     /// <summary>
-    /// Single entry point that regenerates the greybox village: sprites under
-    /// Assets/Art/Greybox, Assets/Prefabs/Player.prefab, and Assets/Scenes/Village.unity.
+    /// Single entry point that regenerates the village: sprite import settings for
+    /// Assets/Art assets, Assets/Prefabs/Player.prefab, and Assets/Scenes/Village.unity.
     /// Idempotent — re-running overwrites all outputs cleanly.
     /// </summary>
     public static class VillageSceneBuilder
     {
+        private const string SpritesFolder = "Assets/Art/Sprites";
+        private const string BackdropsFolder = "Assets/Art/Backdrops";
         private const string GreyboxFolder = "Assets/Art/Greybox";
         private const string PrefabFolder = "Assets/Prefabs";
         private const string SceneFolder = "Assets/Scenes";
@@ -30,7 +35,22 @@ namespace Reebles2D.Editor
         private const string PlayerPrefabPath = PrefabFolder + "/Player.prefab";
         private const string InputActionsPath = "Assets/Input/ReeblesInput.inputactions";
 
-        private const int SpritePixels = 16;
+        private const int UiSpritePixels = 16;
+
+        // All promoted sprites are 1024x1024. PPU chosen so the art lands at
+        // sensible world sizes; transforms below fine-tune the final footprint.
+        private const float BuildingPpu = 250f;   // ~4.1 units per building
+        private const float FountainPpu = 400f;   // ~2.6 units
+        private const float FencePpu = 256f;      // ~4 units per tile
+        private const float LanternPpu = 512f;    // ~2 units
+        private const float GroundPpu = 256f;     // ~4 units per grass tile
+        private const float ReeblePpu = 512f;     // 256x512 cell -> 0.5 x 1 unit
+
+        // Colliders cover only the base of each sprite (doors/water/fence rails),
+        // not the full artwork, so the player can walk in front of roofs.
+        private const float FootprintWidthFraction = 0.7f;
+        private const float FootprintHeightFraction = 0.3f;
+        private const float FountainFootprintFraction = 0.35f;
 
         private static readonly Rect MapBounds = new Rect(-15f, -10f, 30f, 20f);
         private const float FenceThickness = 0.3f;
@@ -42,20 +62,7 @@ namespace Reebles2D.Editor
         private static readonly Color ControlAreaColor = new Color(1f, 1f, 1f, 0.12f);
         private static readonly Color ControlVisualColor = new Color(1f, 1f, 1f, 0.45f);
 
-        private static readonly Color GroundColor = new Color(0.42f, 0.55f, 0.33f);
-        private static readonly Color PlayerColor = new Color(0.95f, 0.55f, 0.20f);
-        private static readonly Color FountainColor = new Color(0.30f, 0.55f, 0.80f);
-        private static readonly Color FenceColor = new Color(0.30f, 0.20f, 0.12f);
-        private static readonly Color[] BuildingColors =
-        {
-            new Color(0.72f, 0.42f, 0.30f),
-            new Color(0.65f, 0.38f, 0.28f),
-            new Color(0.70f, 0.45f, 0.34f),
-            new Color(0.62f, 0.36f, 0.30f),
-            new Color(0.75f, 0.48f, 0.32f),
-        };
-
-        /// <summary>Regenerates all greybox assets and the Village scene.</summary>
+        /// <summary>Regenerates the Village scene and Player prefab from promoted art.</summary>
         public static void Build()
         {
             EnsureFolder("Assets", "Art");
@@ -63,36 +70,58 @@ namespace Reebles2D.Editor
             EnsureFolder("Assets", "Prefabs");
             EnsureFolder("Assets", "Scenes");
 
-            Sprite groundSprite = CreateRectSprite("Ground", GroundColor);
-            Sprite rectSprite = CreateRectSprite("Rect", PlayerColor);
-            Sprite terracottaSprite = CreateRectSprite("Building", BuildingColors[0]);
-            Sprite fountainSprite = CreateCircleSprite("Fountain", FountainColor);
-            Sprite fenceSprite = CreateRectSprite("Fence", FenceColor);
-            Sprite[] buildingSprites = new Sprite[BuildingColors.Length];
-            for (int i = 0; i < BuildingColors.Length; i++)
-            {
-                buildingSprites[i] = CreateRectSprite("Building" + i, BuildingColors[i]);
-            }
+            Sprite groundSprite = EnsureSpriteImport(
+                BackdropsFolder + "/ground_grass.jpg", GroundPpu, alpha: false);
+            Sprite bakerySprite = EnsureSpriteImport(
+                SpritesFolder + "/building_bakery.png", BuildingPpu);
+            Sprite smithySprite = EnsureSpriteImport(
+                SpritesFolder + "/building_smithy.png", BuildingPpu);
+            Sprite herbalistSprite = EnsureSpriteImport(
+                SpritesFolder + "/building_herbalist.png", BuildingPpu);
+            Sprite storeSprite = EnsureSpriteImport(
+                SpritesFolder + "/building_store.png", BuildingPpu);
+            Sprite innSprite = EnsureSpriteImport(
+                SpritesFolder + "/building_inn.png", BuildingPpu);
+            Sprite fountainSprite = EnsureSpriteImport(
+                SpritesFolder + "/fountain.png", FountainPpu);
+            Sprite fenceSprite = EnsureSpriteImport(
+                SpritesFolder + "/fence.png", FencePpu);
+            Sprite lanternSprite = EnsureSpriteImport(
+                SpritesFolder + "/lantern.png", LanternPpu);
+            Sprite reebleSprite = EnsureReebleSheetImport(
+                SpritesFolder + "/reeble_sheet.png", ReeblePpu);
 
-            GameObject playerPrefab = BuildPlayerPrefab(rectSprite);
+            Sprite uiSprite = CreateUiRectSprite("UI_Rect");
+
+            GameObject playerPrefab = BuildPlayerPrefab(reebleSprite);
 
             UnityEngine.SceneManagement.Scene scene = EditorSceneManager.NewScene(
                 NewSceneSetup.EmptyScene, NewSceneMode.Single);
             scene.name = "Village";
 
-            CreateScaledSprite("Ground", groundSprite, Vector3.zero,
-                new Vector2(MapBounds.width, MapBounds.height), sortingOrder: -10);
+            GameObject ground = new GameObject("Ground");
+            ground.transform.position = MapBounds.center;
+            SpriteRenderer groundRenderer = ground.AddComponent<SpriteRenderer>();
+            groundRenderer.sprite = groundSprite;
+            groundRenderer.drawMode = SpriteDrawMode.Tiled;
+            groundRenderer.size = new Vector2(MapBounds.width, MapBounds.height);
+            groundRenderer.sortingOrder = -10;
 
-            CreateBuilding("Bakery", buildingSprites[0], new Vector2(-8f, 5f), new Vector2(4f, 3f));
-            CreateBuilding("Smithy", buildingSprites[1], new Vector2(-8f, -5f), new Vector2(4f, 3f));
-            CreateBuilding("Herbalist", buildingSprites[2], new Vector2(8f, 5f), new Vector2(4f, 3f));
-            CreateBuilding("Store", buildingSprites[3], new Vector2(8f, -5f), new Vector2(4f, 3f));
-            CreateBuilding("Inn", buildingSprites[4], new Vector2(0f, 7f), new Vector2(6f, 3f));
+            CreateBuilding("Bakery", bakerySprite, new Vector2(-8f, 5f), new Vector2(4f, 4f));
+            CreateBuilding("Smithy", smithySprite, new Vector2(-8f, -5f), new Vector2(4f, 4f));
+            CreateBuilding("Herbalist", herbalistSprite, new Vector2(8f, 5f), new Vector2(4f, 4f));
+            CreateBuilding("Store", storeSprite, new Vector2(8f, -5f), new Vector2(4f, 4f));
+            CreateBuilding("Inn", innSprite, new Vector2(0f, 7f), new Vector2(6f, 4f));
 
             GameObject fountain = CreateScaledSprite("Fountain", fountainSprite,
-                Vector3.zero, Vector2.one * 2f, sortingOrder: 0);
+                Vector3.zero, Vector2.one * 2.5f, sortingOrder: 0);
             CircleCollider2D fountainCollider = fountain.AddComponent<CircleCollider2D>();
-            fountainCollider.radius = 0.5f;
+            float fountainLocalRadius = fountainSprite.bounds.extents.x;
+            fountainCollider.radius = fountainLocalRadius * FountainFootprintFraction;
+            fountainCollider.offset = new Vector2(0f, -fountainLocalRadius * 0.4f);
+
+            CreateLantern(lanternSprite, new Vector2(-6.6f, 3.2f));
+            CreateLantern(lanternSprite, new Vector2(9.4f, 3.2f));
 
             BuildFence(fenceSprite);
 
@@ -119,7 +148,7 @@ namespace Reebles2D.Editor
             CinemachineConfiner2D confiner = vcamObject.AddComponent<CinemachineConfiner2D>();
             confiner.BoundingShape2D = boundsCollider;
 
-            BuildMobileControls(rectSprite);
+            BuildMobileControls(uiSprite);
 
             EditorSceneManager.SaveScene(scene, ScenePath);
             AssetDatabase.SaveAssets();
@@ -135,30 +164,129 @@ namespace Reebles2D.Editor
             }
         }
 
-        private static Sprite CreateRectSprite(string name, Color color)
+        /// <summary>
+        /// Applies sprite import settings to a promoted art asset and returns its Sprite.
+        /// </summary>
+        private static Sprite EnsureSpriteImport(string path, float pixelsPerUnit, bool alpha = true)
         {
-            return CreateSprite(name, color, circle: false);
-        }
-
-        private static Sprite CreateCircleSprite(string name, Color color)
-        {
-            return CreateSprite(name, color, circle: true);
-        }
-
-        private static Sprite CreateSprite(string name, Color color, bool circle)
-        {
-            string path = GreyboxFolder + "/" + name + ".png";
-            Texture2D texture = new Texture2D(SpritePixels, SpritePixels, TextureFormat.RGBA32, false);
-            float radius = (SpritePixels - 1) * 0.5f;
-            for (int y = 0; y < SpritePixels; y++)
+            TextureImporter importer = (TextureImporter)AssetImporter.GetAtPath(path);
+            if (importer == null)
             {
-                for (int x = 0; x < SpritePixels; x++)
+                throw new System.InvalidOperationException("No texture importer at " + path);
+            }
+            importer.textureType = TextureImporterType.Sprite;
+            importer.spriteImportMode = SpriteImportMode.Single;
+            importer.spritePixelsPerUnit = pixelsPerUnit;
+            importer.filterMode = FilterMode.Bilinear;
+            importer.mipmapEnabled = false;
+            importer.alphaIsTransparency = alpha;
+            importer.SaveAndReimport();
+
+            Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+            if (sprite == null)
+            {
+                throw new System.InvalidOperationException("Failed to load sprite: " + path);
+            }
+            return sprite;
+        }
+
+        /// <summary>
+        /// Slices the 4x2 reeble sheet into eight sprites and returns cell 0 for the
+        /// player prefab.
+        /// </summary>
+        private static Sprite EnsureReebleSheetImport(string path, float pixelsPerUnit)
+        {
+            TextureImporter importer = (TextureImporter)AssetImporter.GetAtPath(path);
+            if (importer == null)
+            {
+                throw new System.InvalidOperationException("No texture importer at " + path);
+            }
+            importer.textureType = TextureImporterType.Sprite;
+            importer.spriteImportMode = SpriteImportMode.Multiple;
+            importer.spritePixelsPerUnit = pixelsPerUnit;
+            importer.filterMode = FilterMode.Bilinear;
+            importer.mipmapEnabled = false;
+            importer.alphaIsTransparency = true;
+
+            const int columns = 4;
+            const int rows = 2;
+            const int sheetPixels = 1024;
+            int cellWidth = sheetPixels / columns;
+            int cellHeight = sheetPixels / rows;
+            SpriteDataProviderFactories factories = new SpriteDataProviderFactories();
+            factories.Init();
+            ISpriteEditorDataProvider dataProvider =
+                factories.GetSpriteEditorDataProviderFromObject(importer)
+                    as ISpriteEditorDataProvider;
+            if (dataProvider == null)
+            {
+                throw new System.InvalidOperationException(
+                    "No sprite data provider for " + path);
+            }
+            dataProvider.InitSpriteEditorDataProvider();
+
+            // Reuse existing spriteIDs so the prefab's slice reference stays stable.
+            System.Collections.Generic.Dictionary<string, GUID> existingIds =
+                new System.Collections.Generic.Dictionary<string, GUID>();
+            try
+            {
+                foreach (SpriteRect existing in dataProvider.GetSpriteRects())
                 {
-                    bool inside = !circle ||
-                        Vector2.Distance(new Vector2(x, y), new Vector2(radius, radius)) <= radius;
-                    texture.SetPixel(x, y, inside ? color : Color.clear);
+                    existingIds[existing.name] = existing.spriteID;
                 }
             }
+            catch (System.ArgumentNullException)
+            {
+                // Texture has no spritesheet yet — nothing to reuse.
+            }
+
+            SpriteRect[] sheet = new SpriteRect[columns * rows];
+            for (int row = 0; row < rows; row++)
+            {
+                for (int column = 0; column < columns; column++)
+                {
+                    int index = (rows - 1 - row) * columns + column;
+                    string cellName = "reeble_" + index;
+                    sheet[index] = new SpriteRect
+                    {
+                        name = cellName,
+                        spriteID = existingIds.TryGetValue(cellName, out GUID id)
+                            ? id : GUID.Generate(),
+                        rect = new Rect(column * cellWidth, row * cellHeight, cellWidth, cellHeight),
+                        pivot = new Vector2(0.5f, 0.5f),
+                        alignment = SpriteAlignment.Center,
+                    };
+                }
+            }
+            dataProvider.SetSpriteRects(sheet);
+            dataProvider.Apply();
+            importer.SaveAndReimport();
+
+            foreach (Object asset in AssetDatabase.LoadAllAssetsAtPath(path))
+            {
+                if (asset is Sprite sprite && sprite.name == "reeble_0")
+                {
+                    return sprite;
+                }
+            }
+            throw new System.InvalidOperationException("Failed to load reeble_0 slice: " + path);
+        }
+
+        /// <summary>
+        /// Regenerates the small white sprite used by the mobile UI controls. Kept
+        /// procedural because tinted UI chrome has no promoted art.
+        /// </summary>
+        private static Sprite CreateUiRectSprite(string name)
+        {
+            string path = GreyboxFolder + "/" + name + ".png";
+            Texture2D texture = new Texture2D(UiSpritePixels, UiSpritePixels,
+                TextureFormat.RGBA32, false);
+            Color[] pixels = new Color[UiSpritePixels * UiSpritePixels];
+            for (int i = 0; i < pixels.Length; i++)
+            {
+                pixels[i] = Color.white;
+            }
+            texture.SetPixels(pixels);
             texture.Apply();
             File.WriteAllBytes(path, texture.EncodeToPNG());
             Object.DestroyImmediate(texture);
@@ -167,18 +295,16 @@ namespace Reebles2D.Editor
             TextureImporter importer = (TextureImporter)AssetImporter.GetAtPath(path);
             importer.textureType = TextureImporterType.Sprite;
             importer.spriteImportMode = SpriteImportMode.Single;
-            importer.spritePixelsPerUnit = SpritePixels;
-            importer.filterMode = FilterMode.Point;
+            importer.spritePixelsPerUnit = UiSpritePixels;
+            importer.filterMode = FilterMode.Bilinear;
             importer.SaveAndReimport();
 
-            foreach (Object asset in AssetDatabase.LoadAllAssetsAtPath(path))
+            Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+            if (sprite == null)
             {
-                if (asset is Sprite sprite)
-                {
-                    return sprite;
-                }
+                throw new System.InvalidOperationException("Failed to load UI sprite: " + path);
             }
-            throw new System.InvalidOperationException("Failed to load generated sprite: " + path);
+            return sprite;
         }
 
         private static GameObject CreateScaledSprite(string name, Sprite sprite,
@@ -186,18 +312,31 @@ namespace Reebles2D.Editor
         {
             GameObject obj = new GameObject(name);
             obj.transform.position = position;
-            obj.transform.localScale = new Vector3(size.x, size.y, 1f);
             SpriteRenderer renderer = obj.AddComponent<SpriteRenderer>();
             renderer.sprite = sprite;
             renderer.sortingOrder = sortingOrder;
+            Vector2 spriteSize = sprite.bounds.size;
+            obj.transform.localScale = new Vector3(
+                size.x / spriteSize.x, size.y / spriteSize.y, 1f);
             return obj;
         }
 
-        private static void CreateBuilding(string name, Sprite sprite, Vector2 position, Vector2 size)
+        private static void CreateBuilding(string name, Sprite sprite,
+            Vector2 position, Vector2 size)
         {
             GameObject building = CreateScaledSprite(name, sprite, position, size, sortingOrder: 0);
+            Vector2 spriteSize = sprite.bounds.size;
             BoxCollider2D collider = building.AddComponent<BoxCollider2D>();
-            collider.size = Vector2.one;
+            collider.size = new Vector2(
+                spriteSize.x * FootprintWidthFraction,
+                spriteSize.y * FootprintHeightFraction);
+            collider.offset = new Vector2(0f,
+                -spriteSize.y * (0.5f - FootprintHeightFraction * 0.5f));
+        }
+
+        private static void CreateLantern(Sprite sprite, Vector2 position)
+        {
+            CreateScaledSprite("Lantern", sprite, position, Vector2.one * 1f, sortingOrder: 1);
         }
 
         private static void BuildFence(Sprite fenceSprite)
@@ -223,11 +362,16 @@ namespace Reebles2D.Editor
 
             for (int i = 0; i < centers.Length; i++)
             {
-                GameObject segment = CreateScaledSprite(names[i], fenceSprite,
-                    centers[i], sizes[i], sortingOrder: 0);
+                GameObject segment = new GameObject(names[i]);
+                segment.transform.position = centers[i];
                 segment.transform.SetParent(fenceRoot.transform);
+                SpriteRenderer renderer = segment.AddComponent<SpriteRenderer>();
+                renderer.sprite = fenceSprite;
+                renderer.drawMode = SpriteDrawMode.Tiled;
+                renderer.size = sizes[i];
+                renderer.sortingOrder = 0;
                 BoxCollider2D collider = segment.AddComponent<BoxCollider2D>();
-                collider.size = Vector2.one;
+                collider.size = sizes[i];
             }
         }
 
