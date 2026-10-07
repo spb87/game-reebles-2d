@@ -13,7 +13,7 @@ Units of work waiting to be picked up. The Architect moves one task at a time to
 - **Exit criteria**: `git check-ignore .env art/staging/x.png game/Library/x` exits 0 for all three; `test -f .env && grep -q ROUTELLM_API_KEY .env`; `git status --porcelain` shows `.env` is NOT listed.
 - **Max new lines**: ~120
 - **Dependencies**: none
-- **Status**: backlog
+- **Status**: done → see `done.md` (commit 78a43f2)
 
 ### TASK-2: Art pipeline port
 
