@@ -2,6 +2,28 @@
 
 ---
 
+### TASK-4: Unity project creation + packages
+
+- **Feature**: m1-repo-toolchain-scaffold.md
+- **Role**: Developer
+- **Status**: done
+
+```
+COMPLETION REPORT:
+- Task: TASK-4 — Unity project creation + packages
+- Status: complete
+- Files modified: game/Packages/manifest.json, game/Packages/packages-lock.json (generated), game/ProjectSettings/ProjectSettings.asset, game/ProjectSettings/ProjectVersion.txt, plus Unity-generated game/Assets/ assets (DefaultVolumeProfile.asset, UniversalRenderPipelineGlobalSettings.asset + .meta) and remaining game/ProjectSettings/*.asset files — 27 files committed total.
+- What was done: Created Unity 6000.3.24f1 project at game/ via batch -createProject (exit 0); added com.unity.render-pipelines.universal@17.3.0, com.unity.inputsystem@1.14.0, com.unity.cinemachine@3.1.2, com.unity.2d.sprite@1.0.0, com.unity.2d.tilemap@1.0.0; set activeInputHandler: 1, productName: Reebles 2D, companyName: Reebles; re-ran Unity -projectPath -quit (exit 0, packages resolved).
+- How to verify: manifest greps all three packages; activeInputHandler → 1; ProjectVersion.txt → 6000.3.24f1; zero 'error CS' in unity-import.log.
+- Observations: URP resolved cleanly; auto-generated DefaultVolumeProfile/UniversalRenderPipelineGlobalSettings committed (required for URP). Logs gitignored. game/Library correctly excluded.
+- Clarity checkpoint: all 5 passed.
+- Git commit: fcc3727 — feat(TASK-4): create Unity 6000.3.24f1 project with URP/InputSystem/Cinemachine
+```
+
+**Review**: Independently verified all exit criteria — packages pinned (URP 17.3.0, InputSystem 1.14.0, Cinemachine 3.1.2), `activeInputHandler: 1`, version locked to 6000.3.24f1/changeset 4e7b9b5b6244, zero compile errors, working tree clean (Library untracked). 
+
+---
+
 ### TASK-3: Repo tools + README
 
 - **Feature**: m1-repo-toolchain-scaffold.md

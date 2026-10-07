@@ -46,7 +46,7 @@ Units of work waiting to be picked up. The Architect moves one task at a time to
 - **Exit criteria**: Second Unity run exits 0; `grep -E 'render-pipelines.universal|inputsystem|cinemachine' game/Packages/manifest.json` shows all three; `grep 'activeInputHandler' game/ProjectSettings/ProjectSettings.asset` = 1; `game/ProjectSettings/ProjectVersion.txt` = `m_EditorVersion: 6000.3.24f1`; no `error CS` in the log tail.
 - **Max new lines**: ~80 (edits; Unity writes the rest)
 - **Dependencies**: TASK-1 (gitignore must cover game/Library before it exists)
-- **Status**: backlog
+- **Status**: done → see `done.md` (commit fcc3727)
 
 ### TASK-5: URP 2D pipeline bootstrap
 
