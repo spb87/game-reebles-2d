@@ -5,6 +5,7 @@
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
         "Reebles2D.Player",
+        "Reebles2D.UI",
         "Unity.InputSystem",
         "Unity.InputSystem.TestFramework"
     ],

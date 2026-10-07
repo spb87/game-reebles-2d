@@ -8,7 +8,11 @@ using Unity.Cinemachine;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.OnScreen;
+using UnityEngine.InputSystem.UI;
+using UnityEngine.UI;
 
 namespace Reebles2D.Editor
 {
@@ -30,6 +34,13 @@ namespace Reebles2D.Editor
 
         private static readonly Rect MapBounds = new Rect(-15f, -10f, 30f, 20f);
         private const float FenceThickness = 0.3f;
+
+        private const float ControlEdgeOffset = 160f;
+        private const float ControlAreaSize = 220f;
+        private const float ControlVisualSize = 120f;
+        private const float StickMovementRange = 60f;
+        private static readonly Color ControlAreaColor = new Color(1f, 1f, 1f, 0.12f);
+        private static readonly Color ControlVisualColor = new Color(1f, 1f, 1f, 0.45f);
 
         private static readonly Color GroundColor = new Color(0.42f, 0.55f, 0.33f);
         private static readonly Color PlayerColor = new Color(0.95f, 0.55f, 0.20f);
@@ -107,6 +118,8 @@ namespace Reebles2D.Editor
             vcam.Lens.OrthographicSize = 5f;
             CinemachineConfiner2D confiner = vcamObject.AddComponent<CinemachineConfiner2D>();
             confiner.BoundingShape2D = boundsCollider;
+
+            BuildMobileControls(rectSprite);
 
             EditorSceneManager.SaveScene(scene, ScenePath);
             AssetDatabase.SaveAssets();
@@ -216,6 +229,93 @@ namespace Reebles2D.Editor
                 BoxCollider2D collider = segment.AddComponent<BoxCollider2D>();
                 collider.size = Vector2.one;
             }
+        }
+
+        private static void BuildMobileControls(Sprite sprite)
+        {
+            GameObject eventSystemObject = new GameObject("EventSystem");
+            eventSystemObject.AddComponent<EventSystem>();
+            eventSystemObject.AddComponent<InputSystemUIInputModule>();
+
+            GameObject canvasObject = new GameObject("MobileControls");
+            Canvas canvas = canvasObject.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = 100;
+            CanvasScaler scaler = canvasObject.AddComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920f, 1080f);
+            canvasObject.AddComponent<GraphicRaycaster>();
+
+            GameObject root = new GameObject("ControlsRoot");
+            RectTransform rootRect = root.AddComponent<RectTransform>();
+            rootRect.SetParent(canvasObject.transform, false);
+            rootRect.anchorMin = Vector2.zero;
+            rootRect.anchorMax = Vector2.one;
+            rootRect.offsetMin = Vector2.zero;
+            rootRect.offsetMax = Vector2.zero;
+
+            CreateStickArea(root.transform, sprite, "MoveStickArea",
+                new Vector2(0f, 0f), new Vector2(ControlEdgeOffset, ControlEdgeOffset));
+            CreateButtonArea(root.transform, sprite, "InteractButton",
+                new Vector2(1f, 0f), new Vector2(-ControlEdgeOffset, ControlEdgeOffset));
+
+            UI.MobileControlsHud hud = canvasObject.AddComponent<UI.MobileControlsHud>();
+            SerializedObject serializedHud = new SerializedObject(hud);
+            serializedHud.FindProperty("controlsRoot").objectReferenceValue = root;
+            serializedHud.FindProperty("safeAreaTarget").objectReferenceValue = rootRect;
+            serializedHud.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static RectTransform CreateControlArea(Transform parent, string name,
+            Sprite sprite, Vector2 anchor, Vector2 anchoredPosition)
+        {
+            GameObject area = new GameObject(name);
+            RectTransform rect = area.AddComponent<RectTransform>();
+            rect.SetParent(parent, false);
+            rect.anchorMin = anchor;
+            rect.anchorMax = anchor;
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = anchoredPosition;
+            rect.sizeDelta = Vector2.one * ControlAreaSize;
+            Image background = area.AddComponent<Image>();
+            background.sprite = sprite;
+            background.color = ControlAreaColor;
+            return rect;
+        }
+
+        private static RectTransform CreateControlVisual(Transform parent, string name, Sprite sprite)
+        {
+            GameObject visual = new GameObject(name);
+            RectTransform rect = visual.AddComponent<RectTransform>();
+            rect.SetParent(parent, false);
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = Vector2.zero;
+            rect.sizeDelta = Vector2.one * ControlVisualSize;
+            Image image = visual.AddComponent<Image>();
+            image.sprite = sprite;
+            image.color = ControlVisualColor;
+            return rect;
+        }
+
+        private static void CreateStickArea(Transform parent, Sprite sprite, string name,
+            Vector2 anchor, Vector2 anchoredPosition)
+        {
+            RectTransform area = CreateControlArea(parent, name, sprite, anchor, anchoredPosition);
+            RectTransform knob = CreateControlVisual(area, "MoveStick", sprite);
+            OnScreenStick stick = knob.gameObject.AddComponent<OnScreenStick>();
+            stick.controlPath = "<Gamepad>/leftStick";
+            stick.movementRange = StickMovementRange;
+            stick.useIsolatedInputActions = true;
+        }
+
+        private static void CreateButtonArea(Transform parent, Sprite sprite, string name,
+            Vector2 anchor, Vector2 anchoredPosition)
+        {
+            RectTransform area = CreateControlArea(parent, name, sprite, anchor, anchoredPosition);
+            OnScreenButton button = area.gameObject.AddComponent<OnScreenButton>();
+            button.controlPath = "<Gamepad>/buttonEast";
         }
 
         private static GameObject BuildPlayerPrefab(Sprite sprite)

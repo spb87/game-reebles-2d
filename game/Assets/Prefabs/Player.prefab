@@ -168,7 +168,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8c5d773a171bd264d9008908eb9bda85, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Reebles2D.Player.PlayerMovement
+  m_EditorClassIdentifier: Reebles2D.Player::Reebles2D.Player.PlayerMovement
   inputActions: {fileID: -944628639613478452, guid: f639e55d03add2f41b11e68027b0f0ec, type: 3}
   walkSpeed: 3
   runMultiplier: 1.8
