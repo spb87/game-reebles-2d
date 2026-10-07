@@ -1,6 +1,6 @@
 # Feature: Web Smoke Build + Public Deploy
 
-**Epic**: `reebles-2d-mvp.md` · Milestone: M1 · Tracking: local (`TASK-11` … `TASK-12`)
+**Jira Issue**: [REEB-126](https://stan-butler.atlassian.net/browse/REEB-126) (Story) · Epic: [REEB-123](https://stan-butler.atlassian.net/browse/REEB-123) · Milestone: M1
 
 ## Goal
 
@@ -29,8 +29,10 @@ The greybox walking skeleton builds to the Web platform in batch mode and is ser
 
 ## Tasks
 
-- TASK-11: `WebBuild` editor script + Web player settings + local serve verify
-- TASK-12: GitHub repo create + `deploy-pages.py` + Pages enable + URL verify
+| Jira | Summary | Status | Depends on |
+|------|---------|--------|------------|
+| REEB-137 | TASK-11: Web build pipeline + local serve verify | ⏳ To Do | REEB-136 |
+| REEB-138 | TASK-12: GitHub repo + Pages deploy | ⏳ To Do | REEB-137 |
 
 ## Status
 

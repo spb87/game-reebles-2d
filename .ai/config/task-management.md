@@ -7,7 +7,9 @@ Specifies whether this project uses local file-based task tracking or Jira via M
 Set to one of: `local` | `jira`
 
 ```
-Mode: local
+Mode: jira
+Jira Cloud ID: stan-butler.atlassian.net
+Jira Project Key: REEB
 ```
 
 ## Local mode (default)

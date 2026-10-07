@@ -1,6 +1,6 @@
 # Feature: Greybox Scene + Player Movement
 
-**Epic**: `reebles-2d-mvp.md` · Milestone: M1 · Tracking: local (`TASK-7` … `TASK-10`)
+**Jira Issue**: [REEB-125](https://stan-butler.atlassian.net/browse/REEB-125) (Story) · Epic: [REEB-123](https://stan-butler.atlassian.net/browse/REEB-123) · Milestone: M1
 
 ## Goal
 
@@ -31,10 +31,12 @@ A generated greybox `Village.unity` scene exists where the Reeble walks/runs wit
 
 ## Tasks
 
-- TASK-7: Input actions asset + `MovementMath` + `PlayerMovement`
-- TASK-8: `VillageSceneBuilder` — greybox scene, player prefab, colliders, Cinemachine camera
-- TASK-9: EditMode + PlayMode movement/collision tests
-- TASK-10: Mobile on-screen controls (joystick + interact button) folded into the scene builder
+| Jira | Summary | Status | Depends on |
+|------|---------|--------|------------|
+| REEB-133 | TASK-7: Input actions + player movement | ⏳ To Do | REEB-130 |
+| REEB-134 | TASK-8: VillageSceneBuilder — greybox scene | ⏳ To Do | REEB-133 |
+| REEB-135 | TASK-9: Movement + collision tests | ⏳ To Do | REEB-134 |
+| REEB-136 | TASK-10: Mobile on-screen controls | ⏳ To Do | REEB-134 |
 
 ## Status
 

@@ -1,5 +1,7 @@
 # Epic: Reebles 2D — Cozy Village Errands (v1)
 
+**Jira Issue**: [REEB-123](https://stan-butler.atlassian.net/browse/REEB-123) (Epic)
+
 An epic is a project-level goal that is too large to be a single feature. It gets decomposed into milestones, and each milestone gets decomposed into features.
 
 **Scope source of truth**: `reebles-2d-project-scope.md` (MVP Scope v1).

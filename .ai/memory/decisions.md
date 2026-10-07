@@ -74,3 +74,12 @@ Decisions made by the Architect agent. Every agent must read this file before st
 - **Context**: Scope requires one fixed prompt fragment appended verbatim to every generation.
 - **Decision**: The style anchor lives in `art/style-anchor.txt` (committed) and `art/README.md` documents the pipeline (anchor + per-asset prompt → `gen_image.py` → `art/staging/` → promote to `game/Assets/Art/` + prompt record in `art/prompts/`).
 - **Consequences**: Changing the anchor restarts art coherence — treat as a DEC-level change.
+
+### DEC-10: Jira task management — REEB project, Epic→Story→Subtask mapping
+
+- **Date**: 2026-10-07
+- **Context**: User switched `.ai/config/task-management.md` to `Mode: jira` mid-bootstrap (project `REEB` at `stan-butler.atlassian.net` — the same Jira project the archived 3D repo used). All M1 tasks had to be migrated and a new epic created for the 2D version.
+- **Decision**: Adopt the 3D project's REEB mapping (its DEC-7): **Epic** = project epic, **Story** = feature spec, **Subtask** = unit of work. Team-managed REEB has no "Feature" type and can't nest level-0 issues — this mapping yields real parentage at every level. New epic: **REEB-123**. Every issue must have an Epic ancestor; `Task`/`Bug` are legal only as direct Epic children.
+- **Key mapping** (migration): REEB-124 = F1 scaffold, REEB-125 = F2 greybox+movement, REEB-126 = F3 web deploy; TASK-1…12 → REEB-127…138 respectively.
+- **Alternatives considered**: New Jira project for 2D — rejected (REEB already has the workflow + user asked to reuse it). Separate MCP-agnostic issue types — none available.
+- **Consequences**: Commit messages reference REEB keys (`feat(REEB-133): ...`). `active.md`/`bugs/open.md` become Jira-synced snapshots; `backlog.md`/`done.md` are archived to `.ai/tasks/archive/pre-jira-migration/`. Local `TASK-n` numbering stops — new work uses Jira keys directly. Atlassian MCP configured at local scope (`.devin/mcp_config.local.json`, gitignored) per 3D-project precedent.

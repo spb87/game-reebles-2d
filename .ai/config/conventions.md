@@ -73,7 +73,7 @@ Stack layers: **Unity C#** (game code in `game/Assets/`) and **Python tooling** 
 
 ## Git conventions
 
-- Commit messages: conventional commits (`feat:`, `fix:`, `refactor:`, `test:`, `chore:`, `docs:`), reference the task where one exists: `feat(TASK-4): add player movement`
+- Commit messages: conventional commits (`feat:`, `fix:`, `refactor:`, `test:`, `chore:`, `docs:`), reference the Jira key where one exists: `feat(REEB-133): add player movement` (pre-Jira commits used `TASK-n` — see DEC-10 mapping)
 - One commit per task by default; a task may split into logical commits
 - `.ai/` bookkeeping commits use `docs(ai): ...` (orchestrator only)
 - Never commit: `game/Library/`, `game/Temp/`, `game/Obj/`, `game/Builds/`, `game/Logs/`, `*.csproj`, `*.sln`, `.devin/mcp_config.local.json`, `.env`, `art/staging/`

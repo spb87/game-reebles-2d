@@ -4,7 +4,9 @@ Current state of the project. Updated by the Architect after each completed task
 
 ## Current state
 
-Bootstrapped 2026-10-07. Framework docs filled (project-brief, stack, conventions, decisions DEC-1..9), epic `reebles-2d-mvp` created with 5 milestones, M1 decomposed into 3 features / 12 tasks. **M1 Feature 1 (repo + toolchain scaffold) is complete** — awaiting user check-in at the feature boundary.
+Bootstrapped 2026-10-07. Framework docs filled (project-brief, stack, conventions, decisions DEC-1..10), epic `reebles-2d-mvp` created with 5 milestones, M1 decomposed into 3 features / 12 tasks. **M1 Feature 1 (repo + toolchain scaffold) is complete** — awaiting user check-in at the feature boundary.
+
+**Task management: Jira mode** (DEC-10). Epic REEB-123 (In Progress) → Stories REEB-124 (F1, Done), REEB-125 (F2 greybox+movement), REEB-126 (F3 web deploy) → Subtasks REEB-127…138 (TASK-1…12; 127–132 Done). `active.md`/`bugs/open.md` are Jira-synced snapshots; `backlog.md`/`done.md` archived to `.ai/tasks/archive/pre-jira-migration/`. Atlassian MCP at local scope (`.devin/mcp_config.local.json`, gitignored), OAuth cached from the 3D project.
 
 ## What works
 

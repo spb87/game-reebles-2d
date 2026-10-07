@@ -1,6 +1,6 @@
 # Feature: Repo & Toolchain Scaffold
 
-**Epic**: `reebles-2d-mvp.md` · Milestone: M1 · Tracking: local (`TASK-1` … `TASK-6`)
+**Jira Issue**: [REEB-124](https://stan-butler.atlassian.net/browse/REEB-124) (Story) · Epic: [REEB-123](https://stan-butler.atlassian.net/browse/REEB-123) · Milestone: M1
 
 ## Goal
 
@@ -32,12 +32,14 @@ The repo is a working Unity 2D project: `game/` opens in Unity 6000.3.24f1 with 
 
 ## Tasks
 
-- TASK-1: Repo hygiene + secrets (.gitignore, .env.example, .editorconfig, .env copy)
-- TASK-2: Art pipeline port (gen_image.py, style-anchor.txt, art/README.md)
-- TASK-3: Repo tools + README (run-unity.bat, serve-webgl.py, README.md)
-- TASK-4: Unity project creation + package manifest + Input System setting
-- TASK-5: URP 2D pipeline assets via editor bootstrap script
-- TASK-6: Test asmdefs + sanity EditMode test
+| Jira | Summary | Status | Depends on |
+|------|---------|--------|------------|
+| REEB-127 | TASK-1: Repo hygiene + secrets | ✅ Done | — |
+| REEB-128 | TASK-2: Art pipeline port | ✅ Done | REEB-127 |
+| REEB-129 | TASK-3: Repo tools + README | ✅ Done | REEB-127 |
+| REEB-130 | TASK-4: Unity project creation + packages | ✅ Done | REEB-127 |
+| REEB-131 | TASK-5: URP 2D pipeline bootstrap | ✅ Done | REEB-130 |
+| REEB-132 | TASK-6: Test assemblies + sanity test | ✅ Done | REEB-131 |
 
 ## Status
 
