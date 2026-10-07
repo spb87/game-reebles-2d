@@ -55,6 +55,14 @@ curl -sI http://localhost:8080/        # expect HTTP/1.0 200
 
 The game deploys to **GitHub Pages** (repo `spb87/game-reebles-2d`, public). Builds are produced locally by the pinned editor and pushed to the `gh-pages` branch by a deploy script — no CI Unity builds. See DEC-3 in `.ai/memory/decisions.md`.
 
+Live site: <https://spb87.github.io/game-reebles-2d/>
+
+```
+python3 tools/deploy-pages.py
+```
+
+The script is idempotent: it creates the repo/`origin` remote if missing, pushes `main`, stages `game/Builds/Web/*` onto an orphan `gh-pages` branch in a temp clone (with `.nojekyll`), pushes it, and enables Pages. On WSL it uses `gh.exe` (Windows GitHub CLI) for auth — no stored git credentials are required. First deploys take a few minutes to propagate; recheck with `curl -sI https://spb87.github.io/game-reebles-2d/ | head -1`.
+
 ## Repo layout
 
 ```
