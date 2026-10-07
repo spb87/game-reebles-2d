@@ -3,7 +3,8 @@
     "rootNamespace": "Reebles2D.Tests.EditMode",
     "references": [
         "UnityEngine.TestRunner",
-        "UnityEditor.TestRunner"
+        "UnityEditor.TestRunner",
+        "Reebles2D.Player"
     ],
     "includePlatforms": [
         "Editor"

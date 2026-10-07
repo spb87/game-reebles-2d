@@ -1,0 +1,14 @@
+{
+    "name": "Reebles2D.Player",
+    "rootNamespace": "Reebles2D.Player",
+    "references": [
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

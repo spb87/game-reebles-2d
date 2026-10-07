@@ -5,7 +5,7 @@ namespace Reebles2D.Player
 {
     /// <summary>
     /// Thin MonoBehaviour: reads the Player action map and drives a kinematic
-    /// Rigidbody2D via MovePosition in FixedUpdate.
+    /// Rigidbody2D via Slide (collide-and-slide) in FixedUpdate — DEC-4 amended.
     /// </summary>
     [RequireComponent(typeof(Rigidbody2D))]
     public class PlayerMovement : MonoBehaviour
@@ -17,6 +17,7 @@ namespace Reebles2D.Player
         private Rigidbody2D body;
         private InputAction moveAction;
         private InputAction runAction;
+        private Rigidbody2D.SlideMovement slideMovement;
 
         /// <summary>Current planar speed in units per second.</summary>
         public float CurrentSpeed { get; private set; }
@@ -28,6 +29,12 @@ namespace Reebles2D.Player
         {
             body = GetComponent<Rigidbody2D>();
             body.bodyType = RigidbodyType2D.Kinematic;
+
+            slideMovement = new Rigidbody2D.SlideMovement();
+            slideMovement.gravity = Vector2.zero;
+            slideMovement.surfaceUp = Vector2.up;
+            slideMovement.layerMask = Physics2D.AllLayers;
+            slideMovement.useLayerMask = true;
 
             if (inputActions != null)
             {
@@ -63,7 +70,7 @@ namespace Reebles2D.Player
             Vector2 velocity = MovementMath.ComputeVelocity(input, walkSpeed, multiplier);
             CurrentSpeed = velocity.magnitude;
 
-            body.MovePosition(body.position + velocity * Time.fixedDeltaTime);
+            body.Slide(velocity, Time.fixedDeltaTime, slideMovement);
         }
     }
 }
