@@ -28,13 +28,14 @@ Decisions made by the Architect agent. Every agent must read this file before st
 - **Alternatives considered**: itch.io — remains a valid *additional* distribution channel later (v1.1+), but uploads are manual/butler-driven while Pages deploys are a git push. Vercel/Netlify — extra accounts for zero gain over Pages.
 - **Consequences**: Public repo means no secrets may ever be committed — `.env` stays gitignored (enforced by task exit criteria). A `.nojekyll` file ships with the Pages site.
 
-### DEC-4: 2D movement — kinematic Rigidbody2D + MovePosition
+### DEC-4: 2D movement — kinematic Rigidbody2D + Slide
 
-- **Date**: 2026-10-07
+- **Date**: 2026-10-07 (**amended** same day, REEB-134 review)
 - **Context**: Top-down 2D needs collision that matches painted geometry "with no physics surprises" (scope). The 3D project's `CharacterController` choice doesn't apply — it's a 3D component.
-- **Decision**: Player and NPCs use kinematic `Rigidbody2D` + `MovePosition` in `FixedUpdate`. Blocking geometry gets `PolygonCollider2D`/`BoxCollider2D`; pass-through props get none. No dynamic physics (no force-pushed objects, no mass).
-- **Alternatives considered**: `transform.Translate` + manual overlap checks — reinvents collision; dynamic Rigidbody2D — physics jitter against traced colliders is exactly the "physics surprise" the scope warns about.
-- **Consequences**: Deterministic movement, easy PlayMode tests. Tunables (walk/run speed, interact radius) stay `[SerializeField]`.
+- **Decision**: Player and NPCs use kinematic `Rigidbody2D`, moved via **`Rigidbody2D.Slide()`** (Unity 6 kinematic collide-and-slide API) in `FixedUpdate`. Blocking geometry gets `PolygonCollider2D`/`BoxCollider2D`; pass-through props get none. No dynamic physics (no force-pushed objects, no mass).
+- **Amendment**: Originally specified `MovePosition` — kinematic `MovePosition` does NOT collide with static colliders (kinematic bodies only interact with dynamic ones; MovePosition interpolates through walls). `Slide()` is the Unity-6-native kinematic collide-and-slide call; fallback is `body.Cast()` pre-check + `MovePosition` if Slide misbehaves top-down.
+- **Alternatives considered**: `transform.Translate` + manual overlap checks — reinvents collision; dynamic Rigidbody2D — physics jitter against traced colliders is exactly the "physics surprise" the scope warns about; bare `MovePosition` — silently walks through statics (the amendment).
+- **Consequences**: Deterministic movement that actually stops at walls, easy PlayMode tests. Tunables (walk/run speed, interact radius) stay `[SerializeField]`.
 
 ### DEC-5: Sprite animation minimal — 4-direction, 2-4 frame swaps
 
