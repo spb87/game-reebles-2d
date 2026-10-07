@@ -57,7 +57,7 @@ Units of work waiting to be picked up. The Architect moves one task at a time to
 - **Exit criteria**: Unity run exits 0; `ls game/Assets/Settings/` shows the pipeline asset + renderer data; `grep -rl 'm_CustomRenderPipeline' game/ProjectSettings/` shows a non-`{fileID: 0}` GUID; no `error CS` in the log.
 - **Max new lines**: ~70
 - **Dependencies**: TASK-4 (project + URP package must exist)
-- **Status**: backlog
+- **Status**: done → see `done.md` (commit 3908009)
 
 ### TASK-6: Test assemblies + sanity test
 

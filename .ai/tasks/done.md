@@ -2,6 +2,28 @@
 
 ---
 
+### TASK-5: URP 2D pipeline bootstrap
+
+- **Feature**: m1-repo-toolchain-scaffold.md
+- **Role**: Developer
+- **Status**: done
+
+```
+COMPLETION REPORT:
+- Task: TASK-5 — URP 2D pipeline bootstrap
+- Status: complete
+- Files modified: game/Assets/Editor/ProjectBootstrap.cs (new), game/Assets/Settings/Reebles2DPipeline.asset + .meta, Reebles2DRenderer.asset + .meta (generated), game/ProjectSettings/GraphicsSettings.asset, QualitySettings.asset (pipeline references)
+- What was done: Wrote Reebles2D.Editor.ProjectBootstrap with static Setup() — creates Renderer2DData + UniversalRenderPipelineAsset under Assets/Settings/, assigns GraphicsSettings.defaultRenderPipeline and per-quality-level pipelines. Idempotent. Ran Unity batch mode; exited 0.
+- How to verify: Settings/ contains both assets; GraphicsSettings m_CustomRenderPipeline references GUID 1757cf7d…; all six QualitySettings levels assigned; zero 'error CS' in unity-urp.log.
+- Observations: QualitySettings.SetRenderPipelineAssetAt does NOT exist in Unity 6000.3 — per-level assignment uses SetQualityLevel + renderPipeline. QualitySettings serializes the field as customRenderPipeline (all six levels assigned).
+- Clarity checkpoint: all 5 passed
+- Git commit: 3908009 feat(TASK-5): add URP 2D pipeline bootstrap and settings assets
+```
+
+**Review**: Verified — both Settings assets exist, GraphicsSettings references the pipeline GUID, all 6 quality levels assigned, zero compile errors. Correct call on the serialization detail (QualitySettings uses `customRenderPipeline` per-level). Idempotent Setup() is good — future settings tasks can re-run safely.
+
+---
+
 ### TASK-4: Unity project creation + packages
 
 - **Feature**: m1-repo-toolchain-scaffold.md
