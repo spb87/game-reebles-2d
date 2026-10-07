@@ -44,5 +44,5 @@ The repo is a working Unity 2D project: `game/` opens in Unity 6000.3.24f1 with 
 - [x] Spec complete
 - [x] Tasks decomposed
 - [x] Cost estimated
-- [ ] All tasks done
-- [ ] Feature verified
+- [x] All tasks done (TASK-1…6, commits 78a43f2…4fc3c46)
+- [x] Feature verified — acceptance criteria 1-7 independently verified 2026-10-07 (gitignore checks, .env present+untracked, gen_image.py --help, manifest/InputSystem/ProjectVersion pinned, URP 2D pipeline assigned, EditMode 2/2 green, README complete)

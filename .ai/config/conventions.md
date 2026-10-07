@@ -42,6 +42,7 @@ Stack layers: **Unity C#** (game code in `game/Assets/`) and **Python tooling** 
 - PlayMode tests: required for behaviors that need a running scene (player moves on input, interact prompt appears in radius, pickup fills carry slot, fence blocks movement)
 - Running tests: Unity Test Runner in Editor, or batch mode:
   `Unity.exe -batchmode -projectPath game -runTests -testPlatform EditMode -testResults results.xml`
+- **`-runTests` + `-quit` gotcha (TASK-6)**: on Unity 6000.3.24f1, passing `-quit` alongside `-runTests` exits after asset import WITHOUT executing tests and produces no results XML. Omit `-quit` for test runs — Unity still exits cleanly in batchmode. (`-quit` is still correct for `-createProject` and `-executeMethod` runs.)
 - Coverage target: no formal target — every task's exit criteria must name its verification
 - Test location: `game/Assets/Tests/EditMode/`, `game/Assets/Tests/PlayMode/`
 - Mocking: n/a — keep logic pure so mocks are unnecessary

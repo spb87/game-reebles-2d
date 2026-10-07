@@ -68,7 +68,7 @@ Units of work waiting to be picked up. The Architect moves one task at a time to
 - **Exit criteria**: Unity run exits 0; `editmode-results.xml` shows 1 passed / 0 failed; `editmode-results.xml` deleted after verify or gitignored (`*-results.xml` already ignored).
 - **Max new lines**: ~60
 - **Dependencies**: TASK-5
-- **Status**: backlog
+- **Status**: done → see `done.md` (commit 4fc3c46)
 
 ### TASK-7: Input actions + player movement
 

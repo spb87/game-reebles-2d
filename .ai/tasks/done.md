@@ -2,6 +2,27 @@
 
 ---
 
+### TASK-6: Test assemblies + sanity test
+
+- **Feature**: m1-repo-toolchain-scaffold.md
+- **Role**: Developer
+- **Status**: done
+
+```
+COMPLETION REPORT:
+- Task: TASK-6
+- Status: complete
+- Files modified: game/Assets/Tests/EditMode/Reebles2D.Tests.EditMode.asmdef, game/Assets/Tests/PlayMode/Reebles2D.Tests.PlayMode.asmdef, game/Assets/Tests/EditMode/SanityTests.cs (+ .meta files)
+- What was done: EditMode asmdef (editor-only, overrideReferences + nunit), PlayMode asmdef (no platform restriction), SanityTests.cs — one test asserting Application.unityVersion starts with 6000.3 (guards DEC-1), one arithmetic positive/negative assertion. EditMode run: 2 passed / 0 failed, exit 0.
+- Observations: **`-quit` breaks `-runTests` on Unity 6000.3.24f1** — runs including -quit exited after import without executing tests and produced no results XML. Omitting -quit lets tests run and Unity still exits 0 in batchmode. PlayMode asmdef has no scripts yet (expected). debugger-agent/abort_threads shutdown warnings are cosmetic.
+- Clarity checkpoint: all 5 passed
+- Git commit: 4fc3c46 test(TASK-6): add EditMode/PlayMode test assemblies and sanity test
+```
+
+**Review**: Verified — editmode-results.xml `total=2 passed=2 failed=0`. Important pipeline discovery recorded in conventions.md (Running tests): do NOT pass `-quit` with `-runTests`.
+
+---
+
 ### TASK-5: URP 2D pipeline bootstrap
 
 - **Feature**: m1-repo-toolchain-scaffold.md
