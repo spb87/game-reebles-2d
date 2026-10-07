@@ -33,15 +33,15 @@ A generated greybox `Village.unity` scene exists where the Reeble walks/runs wit
 
 | Jira | Summary | Status | Depends on |
 |------|---------|--------|------------|
-| REEB-133 | TASK-7: Input actions + player movement | ⏳ To Do | REEB-130 |
-| REEB-134 | TASK-8: VillageSceneBuilder — greybox scene | ⏳ To Do | REEB-133 |
-| REEB-135 | TASK-9: Movement + collision tests | ⏳ To Do | REEB-134 |
-| REEB-136 | TASK-10: Mobile on-screen controls | ⏳ To Do | REEB-134 |
+| REEB-133 | TASK-7: Input actions + player movement | ✅ Done | REEB-130 |
+| REEB-134 | TASK-8: VillageSceneBuilder — greybox scene | ✅ Done | REEB-133 |
+| REEB-135 | TASK-9: Movement + collision tests | ✅ Done | REEB-134 |
+| REEB-136 | TASK-10: Mobile on-screen controls | ✅ Done | REEB-134 |
 
 ## Status
 
 - [x] Spec complete
 - [x] Tasks decomposed
 - [x] Cost estimated
-- [ ] All tasks done
-- [ ] Feature verified
+- [x] All tasks done
+- [x] Feature verified
