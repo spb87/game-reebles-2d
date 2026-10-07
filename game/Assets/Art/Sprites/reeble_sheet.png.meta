@@ -114,9 +114,9 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 0
-        y: 512
-        width: 256
-        height: 512
+        y: 682.6667
+        width: 341.33334
+        height: 341.33334
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -135,10 +135,10 @@ TextureImporter:
       name: reeble_1
       rect:
         serializedVersion: 2
-        x: 256
-        y: 512
-        width: 256
-        height: 512
+        x: 341.33334
+        y: 682.6667
+        width: 341.33334
+        height: 341.33334
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -157,10 +157,10 @@ TextureImporter:
       name: reeble_2
       rect:
         serializedVersion: 2
-        x: 512
-        y: 512
-        width: 256
-        height: 512
+        x: 682.6667
+        y: 682.6667
+        width: 341.33334
+        height: 341.33334
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -179,10 +179,10 @@ TextureImporter:
       name: reeble_3
       rect:
         serializedVersion: 2
-        x: 768
-        y: 512
-        width: 256
-        height: 512
+        x: 0
+        y: 341.33334
+        width: 341.33334
+        height: 341.33334
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -201,10 +201,10 @@ TextureImporter:
       name: reeble_4
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 256
-        height: 512
+        x: 341.33334
+        y: 341.33334
+        width: 341.33334
+        height: 341.33334
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -223,10 +223,10 @@ TextureImporter:
       name: reeble_5
       rect:
         serializedVersion: 2
-        x: 256
-        y: 0
-        width: 256
-        height: 512
+        x: 682.6667
+        y: 341.33334
+        width: 341.33334
+        height: 341.33334
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -245,10 +245,10 @@ TextureImporter:
       name: reeble_6
       rect:
         serializedVersion: 2
-        x: 512
+        x: 0
         y: 0
-        width: 256
-        height: 512
+        width: 341.33334
+        height: 341.33334
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -267,10 +267,10 @@ TextureImporter:
       name: reeble_7
       rect:
         serializedVersion: 2
-        x: 768
+        x: 341.33334
         y: 0
-        width: 256
-        height: 512
+        width: 341.33334
+        height: 341.33334
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -281,6 +281,28 @@ TextureImporter:
       bones: []
       spriteID: 50a7aaaa5065a274da6b1bc9be1ccbd8
       internalID: -8404234560686966604
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: reeble_8
+      rect:
+        serializedVersion: 2
+        x: 682.6667
+        y: 0
+        width: 341.33334
+        height: 341.33334
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 48c312100a18a5b478ed8173c58bc1b0
+      internalID: 780322171
       vertices: []
       indices: 
       edges: []
@@ -307,6 +329,7 @@ TextureImporter:
       reeble_5: -8172630757227227777
       reeble_6: -2680335793590194653
       reeble_7: -8404234560686966604
+      reeble_8: 780322171
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

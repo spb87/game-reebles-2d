@@ -44,7 +44,8 @@ namespace Reebles2D.Editor
         private const float FencePpu = 256f;      // ~4 units per tile
         private const float LanternPpu = 512f;    // ~2 units
         private const float GroundPpu = 256f;     // backdrop is stretched to map bounds; PPU only sets import scale
-        private const float ReeblePpu = 512f;     // 256x512 cell -> 0.5 x 1 unit
+        private const float ReeblePpu = 512f;     // ~341px sheet cell -> ~0.67 units
+        private const float SingleReeblePpu = 768f; // ~803px single sprite -> ~1 unit
 
         // Colliders cover only the base of each sprite (doors/water/fence rails),
         // not the full artwork, so the player can walk in front of roofs.
@@ -89,8 +90,20 @@ namespace Reebles2D.Editor
                 SpritesFolder + "/fence.png", FencePpu);
             Sprite lanternSprite = EnsureSpriteImport(
                 SpritesFolder + "/lantern.png", LanternPpu);
-            Sprite reebleSprite = EnsureReebleSheetImport(
-                SpritesFolder + "/reeble_sheet.png", ReeblePpu);
+            Sprite reebleSprite;
+            string singleReeblePath = SpritesFolder + "/reeble.png";
+            if (AssetDatabase.LoadAssetAtPath<Texture2D>(singleReeblePath) != null)
+            {
+                // Single on-model sprite from the REEB-142 style re-roll; the
+                // sheet is still sliced below but left unused by the prefab.
+                reebleSprite = EnsureSpriteImport(singleReeblePath, SingleReeblePpu);
+                EnsureReebleSheetImport(SpritesFolder + "/reeble_sheet.png", ReeblePpu);
+            }
+            else
+            {
+                reebleSprite = EnsureReebleSheetImport(
+                    SpritesFolder + "/reeble_sheet.png", ReeblePpu);
+            }
 
             Sprite uiSprite = CreateUiRectSprite("UI_Rect");
 
@@ -189,8 +202,10 @@ namespace Reebles2D.Editor
         }
 
         /// <summary>
-        /// Slices the 4x2 reeble sheet into eight sprites and returns cell 0 for the
-        /// player prefab.
+        /// Slices the 3x3 reeble sheet into nine sprites and returns the center
+        /// (front-facing) cell for the player prefab. Cells are 1024/3 ≈ 341.33px —
+        /// SpriteRect accepts fractional rects. Existing spriteIDs are reused by
+        /// name so the prefab's slice reference stays stable across re-slices.
         /// </summary>
         private static Sprite EnsureReebleSheetImport(string path, float pixelsPerUnit)
         {
@@ -206,11 +221,11 @@ namespace Reebles2D.Editor
             importer.mipmapEnabled = false;
             importer.alphaIsTransparency = true;
 
-            const int columns = 4;
-            const int rows = 2;
+            const int columns = 3;
+            const int rows = 3;
             const int sheetPixels = 1024;
-            int cellWidth = sheetPixels / columns;
-            int cellHeight = sheetPixels / rows;
+            float cellWidth = sheetPixels / (float)columns;
+            float cellHeight = sheetPixels / (float)rows;
             SpriteDataProviderFactories factories = new SpriteDataProviderFactories();
             factories.Init();
             ISpriteEditorDataProvider dataProvider =
@@ -226,11 +241,14 @@ namespace Reebles2D.Editor
             // Reuse existing spriteIDs so the prefab's slice reference stays stable.
             System.Collections.Generic.Dictionary<string, GUID> existingIds =
                 new System.Collections.Generic.Dictionary<string, GUID>();
+            System.Collections.Generic.Dictionary<string, Rect> existingRects =
+                new System.Collections.Generic.Dictionary<string, Rect>();
             try
             {
                 foreach (SpriteRect existing in dataProvider.GetSpriteRects())
                 {
                     existingIds[existing.name] = existing.spriteID;
+                    existingRects[existing.name] = existing.rect;
                 }
             }
             catch (System.ArgumentNullException)
@@ -256,18 +274,37 @@ namespace Reebles2D.Editor
                     };
                 }
             }
-            dataProvider.SetSpriteRects(sheet);
-            dataProvider.Apply();
-            importer.SaveAndReimport();
+            bool matches = existingRects.Count == sheet.Length;
+            if (matches)
+            {
+                foreach (SpriteRect cell in sheet)
+                {
+                    if (!existingRects.TryGetValue(cell.name, out Rect r)
+                        || !Mathf.Approximately(r.x, cell.rect.x)
+                        || !Mathf.Approximately(r.y, cell.rect.y)
+                        || !Mathf.Approximately(r.width, cell.rect.width)
+                        || !Mathf.Approximately(r.height, cell.rect.height))
+                    {
+                        matches = false;
+                        break;
+                    }
+                }
+            }
+            if (!matches)
+            {
+                dataProvider.SetSpriteRects(sheet);
+                dataProvider.Apply();
+                importer.SaveAndReimport();
+            }
 
             foreach (Object asset in AssetDatabase.LoadAllAssetsAtPath(path))
             {
-                if (asset is Sprite sprite && sprite.name == "reeble_0")
+                if (asset is Sprite sprite && sprite.name == "reeble_4")
                 {
                     return sprite;
                 }
             }
-            throw new System.InvalidOperationException("Failed to load reeble_0 slice: " + path);
+            throw new System.InvalidOperationException("Failed to load reeble_4 slice: " + path);
         }
 
         /// <summary>
