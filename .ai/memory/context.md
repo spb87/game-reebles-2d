@@ -45,3 +45,21 @@ Bootstrapped 2026-10-07. Framework docs filled (project-brief, stack, convention
 - Kinematic `MovePosition` does NOT collide with static colliders — use `Rigidbody2D.Slide` (DEC-4 amended, REEB-135)
 - `InputTestFixture.Press()` throws `ArgumentNullException` on Input System 1.14 — queue `KeyboardState` events instead
 - PlayMode tests that `LoadSceneInPlayMode(Village)` must restore scene state — colliders at origin pin subsequently-spawned test players
+
+## Current state (post-M2)
+
+M2 vertical slice COMPLETE + deployed: world expanded 30x20→60x40 w/ treeline perimeter + outskirts props (REEB-144); Interactable/Interactor + prompt bubble (REEB-150); dialogue card + controller + movement suppression via Move-action disable (REEB-151); Marla the Baker NPC at bakery (REEB-152); quest schema in Resources/Quests + QuestService + CarrySlot + HUD objective/hearts/toast (REEB-153/154); E2E loop test + redeploy (REEB-155). PlayMode 30/30, EditMode 12/12. Live: https://spb87.github.io/game-reebles-2d/
+
+## Test-infra notes
+
+- PlayMode tests: NEVER reference `Assets/Input/ReeblesInput.inputactions` — under InputTestFixture the imported asset can report enabled with zero bound controls (passes isolated, fails in full suite). Use per-test synthetic InputActionAsset (convention in InteractionTests/DialogueTests/NpcVillagerTests/QuestLoopTests).
+- `yield return null` in UnityTest may resume within the same Time.frameCount — use a NextFrame() helper that waits for the counter to advance (needed for LastClosedFrame guards).
+- Tests loading Village.unity MUST restore scene state afterward.
+
+## Architecture notes (M2)
+
+- Quest JSON lives in `Assets/Resources/Quests/` (Resources.LoadAll) — non-Resources folders don't ship in WebGL. DEC-6 amended.
+- asmdef dep graph: Player ← Interaction (CarrySlot, IHudView/HudViewLocator); Quests → Interaction+UI; UI → Interaction. Player has no UI/Quests deps; QuestService pushes state.
+- Interactables found via OverlapCircleAll on existing solid colliders, filtered by GetComponentInParent<Interactable> — no separate trigger layer.
+- DialogueController disables the Move action while open (no Player→UI dep).
+- NpcInteractable has LastClosedFrame guard — needed when interactables trigger on the same Interact press that closes a card.
