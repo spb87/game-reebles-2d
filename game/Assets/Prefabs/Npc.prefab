@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 4125816326464051834}
   - component: {fileID: 2083367448742300485}
   - component: {fileID: 4130755131147458813}
-  - component: {fileID: 2760259394696601956}
+  - component: {fileID: 4461457589564807676}
   m_Layer: 0
   m_Name: Npc
   m_TagString: Untagged
@@ -148,7 +148,7 @@ MonoBehaviour:
   - "Fresh bread this morning \u2014 the rye's still warm, if you've a mind."
   - That oven keeps the whole street cozy through the cold nights.
   - Mind the flour on your sleeves, dear. It gets everywhere.
---- !u!114 &2760259394696601956
+--- !u!114 &4461457589564807676
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -157,14 +157,16 @@ MonoBehaviour:
   m_GameObject: {fileID: 567561407476876287}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9901cbe50be25aa40bcbde6b9b657844, type: 3}
+  m_Script: {fileID: 11500000, guid: fa7a65f6e96018f45b7cf9cc2648d967, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Reebles2D.UI::Reebles2D.UI.NpcInteractable
+  m_EditorClassIdentifier: Reebles2D.Quests::Reebles2D.Quests.QuestGiverInteractable
   interactRadius: 1.75
   promptVerb: Talk
   flavorLine: 
   promptHeight: 1.4000001
   npc: {fileID: 4130755131147458813}
+  npcId: marla_baker
+  questId: errand_berries
 --- !u!1 &2755470982896615176
 GameObject:
   m_ObjectHideFlags: 0

@@ -48,6 +48,19 @@ namespace Reebles2D.Editor
 
         private const int UiSpritePixels = 16;
 
+        // Quest wiring (REEB-154): Marla offers/completes errand_berries;
+        // every berry bush is a fetch source for its fetchTargetId.
+        private const string QuestGiverNpcId = "marla_baker";
+        private const string QuestId = "errand_berries";
+        private const string QuestFetchTargetId = "berry_bush";
+
+        // HUD canvas sits under the dialogue card (90) and controls (100).
+        private const int HudCanvasSortingOrder = 80;
+        private const float HudMargin = 24f;
+        private const float HudToastBottom = 280f;
+        private static readonly Color HudTextColor = new Color(0.98f, 0.96f, 1f, 1f);
+        private static readonly Color HudHeartColor = new Color(1f, 0.55f, 0.65f, 1f);
+
         // All promoted sprites are 1024x1024. PPU chosen so the art lands at
         // sensible world sizes; transforms below fine-tune the final footprint.
         private const float BuildingPpu = 250f;   // ~4.1 units per building
@@ -308,6 +321,9 @@ namespace Reebles2D.Editor
             CinemachineConfiner2D confiner = vcamObject.AddComponent<CinemachineConfiner2D>();
             confiner.BoundingShape2D = boundsCollider;
 
+            new GameObject("QuestService").AddComponent<Quests.QuestService>();
+
+            BuildHud();
             BuildMobileControls(uiSprite);
             BuildDialogueUi(cardSprite);
 
@@ -769,13 +785,13 @@ namespace Reebles2D.Editor
 
                 if (kind == OutskirtsProp.BerryBush)
                 {
-                    // REEB-154 wires actual pickup; for now Interact() only logs.
-                    Interaction.Interactable berryInteract =
-                        prop.AddComponent<Interaction.Interactable>();
+                    // All three bushes are quest fetch sources — uniform behavior
+                    // is simpler than flagging one "real" bush (REEB-154).
+                    Quests.QuestItemInteractable berryInteract =
+                        prop.AddComponent<Quests.QuestItemInteractable>();
                     SerializedObject serializedBerry = new SerializedObject(berryInteract);
                     serializedBerry.FindProperty("promptVerb").stringValue = "Pick berries";
-                    serializedBerry.FindProperty("flavorLine").stringValue =
-                        "The berries are not quite ripe yet.";
+                    serializedBerry.FindProperty("targetId").stringValue = QuestFetchTargetId;
                     serializedBerry.FindProperty("interactRadius").floatValue = 1.6f;
                     serializedBerry.FindProperty("promptHeight").floatValue = 0.8f;
                     serializedBerry.ApplyModifiedPropertiesWithoutUndo();
@@ -955,6 +971,93 @@ namespace Reebles2D.Editor
             return text;
         }
 
+        /// <summary>
+        /// Builds the persistent HUD canvas (REEB-154): objective text pinned
+        /// top-left, heart counter top-right, and a CanvasGroup-wrapped toast
+        /// bottom-center above where the dialogue card sits. The Hud component
+        /// registers with HudViewLocator so QuestService can push to it.
+        /// </summary>
+        private static void BuildHud()
+        {
+            GameObject canvasObject = new GameObject("Hud");
+            Canvas canvas = canvasObject.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = HudCanvasSortingOrder;
+            CanvasScaler scaler = canvasObject.AddComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920f, 1080f);
+
+            Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+
+            Text objective = CreateHudText(canvasObject.transform, "ObjectiveText",
+                font, 26, HudTextColor, TextAnchor.UpperLeft,
+                new Vector2(0f, 1f), new Vector2(0f, 1f),
+                new Vector2(HudMargin, -HudMargin), new Vector2(700f, 80f));
+
+            Text hearts = CreateHudText(canvasObject.transform, "HeartsText",
+                font, 30, HudHeartColor, TextAnchor.UpperRight,
+                new Vector2(1f, 1f), new Vector2(1f, 1f),
+                new Vector2(-HudMargin, -HudMargin), new Vector2(200f, 44f));
+            hearts.text = "♥ 0";
+
+            GameObject toastObject = new GameObject("Toast");
+            RectTransform toastRect = toastObject.AddComponent<RectTransform>();
+            toastRect.SetParent(canvasObject.transform, false);
+            toastRect.anchorMin = new Vector2(0.5f, 0f);
+            toastRect.anchorMax = new Vector2(0.5f, 0f);
+            toastRect.pivot = new Vector2(0.5f, 0f);
+            toastRect.anchoredPosition = new Vector2(0f, HudToastBottom);
+            toastRect.sizeDelta = new Vector2(800f, 44f);
+            CanvasGroup toastGroup = toastObject.AddComponent<CanvasGroup>();
+            toastGroup.alpha = 0f;
+            toastGroup.interactable = false;
+            toastGroup.blocksRaycasts = false;
+            Text toast = toastObject.AddComponent<Text>();
+            toast.font = font;
+            toast.fontSize = 26;
+            toast.color = HudTextColor;
+            toast.alignment = TextAnchor.MiddleCenter;
+            toast.horizontalOverflow = HorizontalWrapMode.Wrap;
+            toast.verticalOverflow = VerticalWrapMode.Overflow;
+            toast.raycastTarget = false;
+
+            UI.Hud hud = canvasObject.AddComponent<UI.Hud>();
+            SerializedObject serializedHud = new SerializedObject(hud);
+            serializedHud.FindProperty("objectiveText").objectReferenceValue = objective;
+            serializedHud.FindProperty("heartsText").objectReferenceValue = hearts;
+            serializedHud.FindProperty("toastText").objectReferenceValue = toast;
+            serializedHud.FindProperty("toastGroup").objectReferenceValue = toastGroup;
+            serializedHud.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        /// <summary>
+        /// Creates a uGUI Text anchored to a screen corner/edge.
+        /// <paramref name="anchor"/> is shared by anchorMin/anchorMax/pivot so
+        /// <paramref name="anchoredPosition"/> offsets inward from it.
+        /// </summary>
+        private static Text CreateHudText(Transform parent, string name,
+            Font font, int fontSize, Color color, TextAnchor alignment,
+            Vector2 anchor, Vector2 pivot, Vector2 anchoredPosition, Vector2 size)
+        {
+            GameObject textObject = new GameObject(name);
+            RectTransform rect = textObject.AddComponent<RectTransform>();
+            rect.SetParent(parent, false);
+            rect.anchorMin = anchor;
+            rect.anchorMax = anchor;
+            rect.pivot = pivot;
+            rect.anchoredPosition = anchoredPosition;
+            rect.sizeDelta = size;
+            Text text = textObject.AddComponent<Text>();
+            text.font = font;
+            text.fontSize = fontSize;
+            text.color = color;
+            text.alignment = alignment;
+            text.horizontalOverflow = HorizontalWrapMode.Wrap;
+            text.verticalOverflow = VerticalWrapMode.Overflow;
+            text.raycastTarget = false;
+            return text;
+        }
+
         private static void BuildMobileControls(Sprite sprite)
         {
             GameObject eventSystemObject = new GameObject("EventSystem");
@@ -1057,6 +1160,7 @@ namespace Reebles2D.Editor
             Player.PlayerFacing facing = player.AddComponent<Player.PlayerFacing>();
             Interaction.Interactor interactor =
                 player.AddComponent<Interaction.Interactor>();
+            player.AddComponent<Interaction.CarrySlot>();
 
             // Single shared prompt bubble: a world-space child the Interactor
             // repositions over the current target. ~0.4 world units after
@@ -1141,12 +1245,18 @@ namespace Reebles2D.Editor
                 "Mind the flour on your sleeves, dear. It gets everywhere.";
             serializedNpc.ApplyModifiedPropertiesWithoutUndo();
 
-            UI.NpcInteractable interactable = npc.AddComponent<UI.NpcInteractable>();
+            // QuestGiverInteractable subclasses NpcInteractable: it serves
+            // quest offer/active/complete lines by phase and falls back to the
+            // NpcComponent flavor lines once the quest is done (REEB-154).
+            Quests.QuestGiverInteractable interactable =
+                npc.AddComponent<Quests.QuestGiverInteractable>();
             SerializedObject serializedInteract = new SerializedObject(interactable);
             serializedInteract.FindProperty("promptVerb").stringValue = "Talk";
             serializedInteract.FindProperty("interactRadius").floatValue = NpcInteractRadius;
             serializedInteract.FindProperty("promptHeight").floatValue = NpcHeight + 0.2f;
             serializedInteract.FindProperty("npc").objectReferenceValue = component;
+            serializedInteract.FindProperty("npcId").stringValue = QuestGiverNpcId;
+            serializedInteract.FindProperty("questId").stringValue = QuestId;
             serializedInteract.ApplyModifiedPropertiesWithoutUndo();
 
             // Shadow scale cancels the NPC's transform so the ellipse lands at

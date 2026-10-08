@@ -1,7 +1,10 @@
 {
     "name": "Reebles2D.Quests",
     "rootNamespace": "Reebles2D.Quests",
-    "references": [],
+    "references": [
+        "Reebles2D.Interaction",
+        "Reebles2D.UI"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

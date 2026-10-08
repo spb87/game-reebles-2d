@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 6088508876092827298}
   - component: {fileID: 6163359182514255299}
   - component: {fileID: 8850623660970889863}
+  - component: {fileID: 5684254492139661185}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -209,6 +210,18 @@ MonoBehaviour:
   inputActions: {fileID: -944628639613478452, guid: f639e55d03add2f41b11e68027b0f0ec, type: 3}
   prompt: {fileID: 7469041944559057418}
   scanRadius: 3
+--- !u!114 &5684254492139661185
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2535994150766476160}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2bb05b30c4469594bade8c293f1f390f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Reebles2D.Interaction::Reebles2D.Interaction.CarrySlot
 --- !u!1 &7033795419808663639
 GameObject:
   m_ObjectHideFlags: 0
