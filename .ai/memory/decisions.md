@@ -49,7 +49,7 @@ Decisions made by the Architect agent. Every agent must read this file before st
 
 - **Date**: 2026-10-07
 - **Context**: Scope requires "5 quests as data (ScriptableObjects or JSON) — adding a quest must not touch code."
-- **Decision**: **JSON** files under `game/Assets/Data/Quests/` (imported as TextAssets), loaded by a `QuestLibrary` at startup.
+- **Decision**: **JSON** files under `game/Assets/Resources/Quests/` loaded via `Resources.LoadAll<TextAsset>("Quests")` by `QuestLibrary` — moved from `Assets/Data/` during REEB-153 because non-Resources folders don't ship in WebGL builds.
 - **Alternatives considered**: ScriptableObjects — Unity-idiomatic but `.asset` YAML is fragile to hand-edit, hostile to diffs, and EditMode tests for data validation are cleaner against JSON.
 - **Consequences**: Quest authoring is "drop in a JSON file" — validated by an EditMode test that parses every file in the folder and checks required fields (npc, item, location, dialogue lines, reward).
 
