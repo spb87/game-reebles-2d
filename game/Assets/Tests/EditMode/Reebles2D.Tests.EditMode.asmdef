@@ -4,7 +4,8 @@
     "references": [
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
-        "Reebles2D.Player"
+        "Reebles2D.Player",
+        "Reebles2D.Quests"
     ],
     "includePlatforms": [
         "Editor"

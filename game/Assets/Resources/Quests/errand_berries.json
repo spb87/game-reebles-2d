@@ -1,0 +1,21 @@
+{
+    "id": "errand_berries",
+    "giverNpcId": "marla_baker",
+    "title": "A Berry for the Baker",
+    "objectiveText": "Pick berries from the berry bush for Marla the Baker.",
+    "offerLines": [
+        "Oh, hello little Reeble! I'm baking a pie, but I've run clean out of berries.",
+        "Would you be a dear and pick some from the berry bush for me?"
+    ],
+    "activeLines": [
+        "The berry bush is just down the lane — you can't miss it.",
+        "Pick the ripest ones! My pie deserves nothing less."
+    ],
+    "completeLines": [
+        "Oh, these are perfect! You have a fine eye for berries.",
+        "Thank you, little Reeble — this pie will be the talk of the village!"
+    ],
+    "fetchItemId": "berries",
+    "fetchTargetId": "berry_bush",
+    "rewardHearts": 1
+}
