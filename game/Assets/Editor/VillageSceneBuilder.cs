@@ -41,8 +41,8 @@ namespace Reebles2D.Editor
         // sensible world sizes; transforms below fine-tune the final footprint.
         private const float BuildingPpu = 250f;   // ~4.1 units per building
         private const float FountainPpu = 400f;   // ~2.6 units
-        private const float FencePpu = 256f;      // ~4 units per tile
         private const float LanternPpu = 512f;    // ~2 units
+        private const float PropPpu = 300f;       // ~3.4 units tall for 1024px prop art
         private const float GroundPpu = 256f;     // backdrop is stretched to map bounds; PPU only sets import scale
         private const float ReeblePpu = 512f;     // ~341px sheet cell -> ~0.67 units
         private const float SingleReeblePpu = 768f; // ~803px single sprite -> ~1 unit
@@ -62,9 +62,52 @@ namespace Reebles2D.Editor
         private const float FootprintHeightFraction = 0.3f;
         private const float FountainFootprintFraction = 0.35f;
 
-        private static readonly Rect MapBounds = new Rect(-15f, -10f, 30f, 20f);
-        private const float FenceThickness = 0.3f;
-        private const float FenceSegmentHeight = 1f;
+        private static readonly Rect MapBounds = new Rect(-30f, -20f, 60f, 40f);
+
+        // Treeline perimeter: trees sit ~1.2u inside the bounds; collision is a
+        // separate thin wall strip on each edge so spacing cannot open gaps.
+        private const float TreelineInset = 1.2f;
+        private const float TreelineSpacing = 1.35f;
+        private const float WallThickness = 0.3f;
+
+        // Outskirts prop sizes (world height) and collider footprint.
+        private const float TreeHeight = 3.2f;
+        private const float BushHeight = 1.3f;
+        private const float RockHeight = 1f;
+        private const float FlowerPatchSize = 1f;
+        private const float PropFootprintRadius = 0.3f;
+
+        // Prop kinds scattered between the village core and the treeline.
+        private enum OutskirtsProp { Oak, Pine, RoundTree, Bush, BerryBush, Rock, Flowers }
+
+        // Hand-placed to stay out of the ~11u village core, the cardinal path
+        // corridors (|x| < 2 / |y| < 2), and the treeline inset band.
+        private static readonly (OutskirtsProp Kind, Vector2 Position)[] ScatterPlacements =
+        {
+            (OutskirtsProp.Oak, new Vector2(-22f, 10f)),
+            (OutskirtsProp.Pine, new Vector2(-15f, -13f)),
+            (OutskirtsProp.RoundTree, new Vector2(19f, 11f)),
+            (OutskirtsProp.Oak, new Vector2(24f, -9f)),
+            (OutskirtsProp.Pine, new Vector2(-25f, -4f)),
+            (OutskirtsProp.RoundTree, new Vector2(13f, 15f)),
+            (OutskirtsProp.Bush, new Vector2(-18f, 14f)),
+            (OutskirtsProp.Bush, new Vector2(15f, -14f)),
+            (OutskirtsProp.Bush, new Vector2(-19f, -11f)),
+            (OutskirtsProp.Bush, new Vector2(23f, 5f)),
+            (OutskirtsProp.Bush, new Vector2(11f, -16f)),
+            (OutskirtsProp.BerryBush, new Vector2(-17f, 5f)),
+            (OutskirtsProp.BerryBush, new Vector2(16f, -7f)),
+            (OutskirtsProp.BerryBush, new Vector2(25f, 13f)),
+            (OutskirtsProp.Rock, new Vector2(-11f, -16f)),
+            (OutskirtsProp.Rock, new Vector2(26f, 3f)),
+            (OutskirtsProp.Rock, new Vector2(6f, 17f)),
+            (OutskirtsProp.Rock, new Vector2(-26f, 15f)),
+            (OutskirtsProp.Flowers, new Vector2(-9f, 13f)),
+            (OutskirtsProp.Flowers, new Vector2(10f, 13f)),
+            (OutskirtsProp.Flowers, new Vector2(-21f, 2f)),
+            (OutskirtsProp.Flowers, new Vector2(20f, -15f)),
+            (OutskirtsProp.Flowers, new Vector2(-27f, -9f)),
+        };
 
         private const float ControlEdgeOffset = 160f;
         private const float ControlAreaSize = 220f;
@@ -82,7 +125,7 @@ namespace Reebles2D.Editor
             EnsureFolder("Assets", "Scenes");
 
             Sprite groundSprite = EnsureSpriteImport(
-                BackdropsFolder + "/village_ground.jpg", GroundPpu, alpha: false);
+                BackdropsFolder + "/world_terrain.jpg", GroundPpu, alpha: false);
             Sprite bakerySprite = EnsureSpriteImport(
                 SpritesFolder + "/building_bakery.png", BuildingPpu);
             Sprite smithySprite = EnsureSpriteImport(
@@ -95,8 +138,20 @@ namespace Reebles2D.Editor
                 SpritesFolder + "/building_inn.png", BuildingPpu);
             Sprite fountainSprite = EnsureSpriteImport(
                 SpritesFolder + "/fountain.png", FountainPpu);
-            Sprite fenceSprite = EnsureSpriteImport(
-                SpritesFolder + "/fence.png", FencePpu);
+            Sprite treeOakSprite = EnsureSpriteImport(
+                SpritesFolder + "/tree_oak.png", PropPpu);
+            Sprite treePineSprite = EnsureSpriteImport(
+                SpritesFolder + "/tree_pine.png", PropPpu);
+            Sprite treeRoundSprite = EnsureSpriteImport(
+                SpritesFolder + "/tree_round.png", PropPpu);
+            Sprite bushSprite = EnsureSpriteImport(
+                SpritesFolder + "/bush.png", PropPpu);
+            Sprite berryBushSprite = EnsureSpriteImport(
+                SpritesFolder + "/bush_berry.png", PropPpu);
+            Sprite rockSprite = EnsureSpriteImport(
+                SpritesFolder + "/rock.png", PropPpu);
+            Sprite flowersSprite = EnsureSpriteImport(
+                SpritesFolder + "/flowers.png", PropPpu);
             Sprite lanternSprite = EnsureSpriteImport(
                 SpritesFolder + "/lantern.png", LanternPpu);
             Sprite reebleSprite;
@@ -166,7 +221,9 @@ namespace Reebles2D.Editor
             CreateLantern(lanternSprite, new Vector2(-6.6f, 3.2f), shadowSprite);
             CreateLantern(lanternSprite, new Vector2(9.4f, 3.2f), shadowSprite);
 
-            BuildFence(fenceSprite);
+            BuildTreeline(treeOakSprite, treePineSprite, treeRoundSprite, shadowSprite);
+            ScatterOutskirtsProps(shadowSprite, treeOakSprite, treePineSprite,
+                treeRoundSprite, bushSprite, berryBushSprite, rockSprite, flowersSprite);
 
             GameObject player = (GameObject)PrefabUtility.InstantiatePrefab(playerPrefab, scene);
             player.transform.position = new Vector3(0f, -3f, 0f);
@@ -483,74 +540,71 @@ namespace Reebles2D.Editor
         }
 
         /// <summary>
-        /// Rings the map with discrete fence-segment sprites scaled to
-        /// <see cref="FenceSegmentHeight"/> tall (horizontal art is reused rotated
-        /// 90 degrees on the vertical edges). Collision stays on four thin
-        /// strips so segment spacing cannot open gaps.
+        /// Rings the map with a dense treeline — oak/pine/round sprites cycled
+        /// along all four edges just inside the bounds. Collision stays on four
+        /// thin wall strips so tree spacing cannot open gaps.
         /// </summary>
-        private static void BuildFence(Sprite fenceSprite)
+        private static void BuildTreeline(Sprite oak, Sprite pine, Sprite round,
+            Sprite shadowSprite)
         {
-            GameObject fenceRoot = new GameObject("Fence");
+            Sprite[] cycle = { oak, pine, round };
+            GameObject treelineRoot = new GameObject("Treeline");
             float halfWidth = MapBounds.width * 0.5f;
             float halfHeight = MapBounds.height * 0.5f;
+            float insetY = halfHeight - TreelineInset;
+            float insetX = halfWidth - TreelineInset;
 
-            Vector2 spriteSize = fenceSprite.bounds.size;
-            float segmentScale = FenceSegmentHeight / spriteSize.y;
-            float segmentWidth = spriteSize.x * segmentScale;
+            LayTreelineEdge(treelineRoot.transform, cycle, "TreelineNorth",
+                new Vector2(-halfWidth, insetY), Vector2.right,
+                MapBounds.width, shadowSprite);
+            LayTreelineEdge(treelineRoot.transform, cycle, "TreelineSouth",
+                new Vector2(-halfWidth, -insetY), Vector2.right,
+                MapBounds.width, shadowSprite);
+            LayTreelineEdge(treelineRoot.transform, cycle, "TreelineWest",
+                new Vector2(-insetX, -halfHeight), Vector2.up,
+                MapBounds.height, shadowSprite);
+            LayTreelineEdge(treelineRoot.transform, cycle, "TreelineEast",
+                new Vector2(insetX, -halfHeight), Vector2.up,
+                MapBounds.height, shadowSprite);
 
-            LayFenceEdge(fenceRoot.transform, fenceSprite, "FenceNorth",
-                new Vector2(-halfWidth, halfHeight), Vector2.right,
-                MapBounds.width, segmentWidth, segmentScale, rotateVertical: false);
-            LayFenceEdge(fenceRoot.transform, fenceSprite, "FenceSouth",
-                new Vector2(-halfWidth, -halfHeight), Vector2.right,
-                MapBounds.width, segmentWidth, segmentScale, rotateVertical: false);
-            LayFenceEdge(fenceRoot.transform, fenceSprite, "FenceWest",
-                new Vector2(-halfWidth, -halfHeight), Vector2.up,
-                MapBounds.height, segmentWidth, segmentScale, rotateVertical: true);
-            LayFenceEdge(fenceRoot.transform, fenceSprite, "FenceEast",
-                new Vector2(halfWidth, -halfHeight), Vector2.up,
-                MapBounds.height, segmentWidth, segmentScale, rotateVertical: true);
-
-            CreateFenceCollider(fenceRoot.transform, "FenceNorthCollider",
+            CreateWallCollider(treelineRoot.transform, "WallNorth",
                 new Vector2(MapBounds.center.x, halfHeight),
-                new Vector2(MapBounds.width + FenceThickness, FenceThickness));
-            CreateFenceCollider(fenceRoot.transform, "FenceSouthCollider",
+                new Vector2(MapBounds.width + WallThickness, WallThickness));
+            CreateWallCollider(treelineRoot.transform, "WallSouth",
                 new Vector2(MapBounds.center.x, -halfHeight),
-                new Vector2(MapBounds.width + FenceThickness, FenceThickness));
-            CreateFenceCollider(fenceRoot.transform, "FenceWestCollider",
+                new Vector2(MapBounds.width + WallThickness, WallThickness));
+            CreateWallCollider(treelineRoot.transform, "WallWest",
                 new Vector2(-halfWidth, MapBounds.center.y),
-                new Vector2(FenceThickness, MapBounds.height + FenceThickness));
-            CreateFenceCollider(fenceRoot.transform, "FenceEastCollider",
+                new Vector2(WallThickness, MapBounds.height + WallThickness));
+            CreateWallCollider(treelineRoot.transform, "WallEast",
                 new Vector2(halfWidth, MapBounds.center.y),
-                new Vector2(FenceThickness, MapBounds.height + FenceThickness));
+                new Vector2(WallThickness, MapBounds.height + WallThickness));
         }
 
         /// <summary>
-        /// Places whole fence segments end to end from <paramref name="start"/>
-        /// along <paramref name="direction"/>. Vertical runs reuse the same art
-        /// rotated upright so the pickets stay vertical.
+        /// Places trees end to end from <paramref name="start"/> along
+        /// <paramref name="direction"/>, cycling oak/pine/round sprites.
         /// </summary>
-        private static void LayFenceEdge(Transform parent, Sprite fenceSprite,
+        private static void LayTreelineEdge(Transform parent, Sprite[] cycle,
             string name, Vector2 start, Vector2 direction, float length,
-            float segmentWidth, float segmentScale, bool rotateVertical)
+            Sprite shadowSprite)
         {
-            int count = Mathf.Max(1, Mathf.CeilToInt(length / segmentWidth));
+            int count = Mathf.Max(1, Mathf.RoundToInt(length / TreelineSpacing));
             float step = length / count;
-            float angle = rotateVertical ? 90f : 0f;
             for (int i = 0; i < count; i++)
             {
-                GameObject segment = new GameObject(name + "_" + i);
-                segment.transform.SetParent(parent);
-                segment.transform.position = start + direction * (step * (i + 0.5f));
-                segment.transform.rotation = Quaternion.Euler(0f, 0f, angle);
-                segment.transform.localScale = Vector3.one * segmentScale;
-                SpriteRenderer renderer = segment.AddComponent<SpriteRenderer>();
-                renderer.sprite = fenceSprite;
-                renderer.sortingOrder = 0;
+                Vector2 position = start + direction * (step * (i + 0.5f));
+                Sprite sprite = cycle[i % cycle.Length];
+                CreateScaledSprite(name + "_" + i, sprite, position,
+                    Vector2.one * TreeHeight, sortingOrder: 0)
+                    .transform.SetParent(parent, true);
+                AddShadow(shadowSprite,
+                    new Vector2(position.x, position.y - TreeHeight * 0.5f),
+                    TreeHeight * 0.35f);
             }
         }
 
-        private static void CreateFenceCollider(Transform parent, string name,
+        private static void CreateWallCollider(Transform parent, string name,
             Vector2 center, Vector2 size)
         {
             GameObject strip = new GameObject(name);
@@ -558,6 +612,76 @@ namespace Reebles2D.Editor
             strip.transform.position = center;
             BoxCollider2D collider = strip.AddComponent<BoxCollider2D>();
             collider.size = size;
+        }
+
+        /// <summary>
+        /// Scatters the hand-placed outskirts props from
+        /// <see cref="ScatterPlacements"/>: trees/bushes/rocks get a base circle
+        /// collider and a soft shadow; flower patches are flat pass-through
+        /// decals (no collider, no shadow).
+        /// </summary>
+        private static void ScatterOutskirtsProps(Sprite shadowSprite,
+            Sprite oak, Sprite pine, Sprite round, Sprite bush,
+            Sprite berryBush, Sprite rock, Sprite flowers)
+        {
+            GameObject root = new GameObject("OutskirtsProps");
+            for (int i = 0; i < ScatterPlacements.Length; i++)
+            {
+                OutskirtsProp kind = ScatterPlacements[i].Kind;
+                Vector2 position = ScatterPlacements[i].Position;
+                Sprite sprite = SpriteForProp(kind, oak, pine, round, bush,
+                    berryBush, rock, flowers);
+                float height = PropHeight(kind);
+                bool flat = kind == OutskirtsProp.Flowers;
+
+                GameObject prop = CreateScaledSprite(kind + "_" + i, sprite, position,
+                    Vector2.one * height, sortingOrder: flat ? -8 : 0);
+                prop.transform.SetParent(root.transform, true);
+                if (flat)
+                {
+                    continue;
+                }
+
+                CircleCollider2D collider = prop.AddComponent<CircleCollider2D>();
+                collider.radius = PropFootprintRadius / prop.transform.localScale.x;
+                collider.offset = new Vector2(0f, -sprite.bounds.extents.y * 0.7f);
+                AddShadow(shadowSprite,
+                    new Vector2(position.x, position.y - height * 0.5f),
+                    PropFootprintRadius * 2f);
+            }
+        }
+
+        private static Sprite SpriteForProp(OutskirtsProp kind,
+            Sprite oak, Sprite pine, Sprite round, Sprite bush,
+            Sprite berryBush, Sprite rock, Sprite flowers)
+        {
+            switch (kind)
+            {
+                case OutskirtsProp.Oak: return oak;
+                case OutskirtsProp.Pine: return pine;
+                case OutskirtsProp.RoundTree: return round;
+                case OutskirtsProp.Bush: return bush;
+                case OutskirtsProp.BerryBush: return berryBush;
+                case OutskirtsProp.Rock: return rock;
+                default: return flowers;
+            }
+        }
+
+        private static float PropHeight(OutskirtsProp kind)
+        {
+            switch (kind)
+            {
+                case OutskirtsProp.Oak:
+                case OutskirtsProp.Pine:
+                case OutskirtsProp.RoundTree:
+                    return TreeHeight;
+                case OutskirtsProp.Rock:
+                    return RockHeight;
+                case OutskirtsProp.Flowers:
+                    return FlowerPatchSize;
+                default:
+                    return BushHeight;
+            }
         }
 
         private static void BuildMobileControls(Sprite sprite)
