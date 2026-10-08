@@ -4,13 +4,13 @@ Jira-synced snapshot (Mode: jira — DEC-10). The Architect writes the current t
 
 ---
 
-### REEB-148: W2 — Builder: expanded map + treeline perimeter + prop scatter
+### REEB-149: W3 — Bounds tests + rebuild + redeploy expanded world
 
 - **Feature**: REEB-144 (M2: World expansion — outskirts beyond the village)
 - **Role**: Developer
-- **Files allowed**: `game/Assets/Editor/VillageSceneBuilder.cs`, generated `Village.unity`/`Player.prefab`, `game/Assets/Tests/PlayMode/*.cs` if tests need adjusting
-- **Input**: Extend `VillageSceneBuilder.Build` — MapBounds → 60x40 centered on origin. Backdrop: `Backdrops/world_terrain.jpg` single stretched SpriteRenderer (NO tiling — the 4:3 image covers 60x40 ≈ 3:2; mild vertical squash acceptable). Village core UNCHANGED (buildings/fountain/plaza positions as-is, centered — the backdrop's painted plaza circle lands near the fountain). Perimeter: replace perimeter picket fence with a **treeline** — repeating tree sprites (alternate tree_oak/tree_pine/tree_round) spaced ~1.2-1.5u hugging all 4 edges just inside bounds + 4 thin BoxCollider2D strips enclosing the map (collider = the wall). Prop scatter between village core and treeline: ~15-25 trees/bushes/rocks with footprint colliders + pass-through flower patches; keep paths/plaza clear and routes to buildings open. 2-3 `bush_berry` bushes in the outskirts (future quest items). CameraBounds/confiner → 60x40. Extend the existing shared-shadow placement to new props (trees/bushes/rocks; flowers optional — they're flat on ground, skip shadow).
-- **Exit criteria**: builder exits 0; Village.unity regenerated w/ 60x40 bounds + treeline + props; PlayMode suite stays green (existing tests + wall-blocking still passes).
-- **Max new lines**: ~250
+- **Files allowed**: `game/Assets/Tests/PlayMode/*.cs`, `game/Assets/Editor/VillageSceneBuilder.cs` (only if test-driven fixes needed)
+- **Input**: Extend PlayMode tests: player cannot leave the new 60x40 bounds via treeline (drive player at an edge, assert position clamps inside bounds); camera confiner bound check if cheap. Then rebuild WebGL (`run-unity.bat ... -executeMethod Reebles2D.Editor.WebBuild.Build -quit`, WINDOWS log path like `C:\Source\game-reebles-2d\webgl-build.log`), `python3 tools/deploy-pages.py`, verify new gh-pages commit + live URL 200.
+- **Exit criteria**: PlayMode suite green incl. new bounds test; new gh-pages commit; `curl -sI https://spb87.github.io/game-reebles-2d/` → 200.
+- **Max new lines**: ~120
 - **Status**: in progress
-- **Git**: `feat(REEB-148): expand world to 60x40 with treeline edge + props`
+- **Git**: `test(REEB-149): verify expanded world bounds + redeploy`
