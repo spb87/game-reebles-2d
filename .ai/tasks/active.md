@@ -4,13 +4,13 @@ Jira-synced snapshot (Mode: jira — DEC-10). The Architect writes the current t
 
 ---
 
-### REEB-149: W3 — Bounds tests + rebuild + redeploy expanded world
+### REEB-150: I1 — Interactable + Interactor + prompt UI
 
-- **Feature**: REEB-144 (M2: World expansion — outskirts beyond the village)
+- **Feature**: REEB-145 (M2: Interaction + dialogue card + first NPC)
 - **Role**: Developer
-- **Files allowed**: `game/Assets/Tests/PlayMode/*.cs`, `game/Assets/Editor/VillageSceneBuilder.cs` (only if test-driven fixes needed)
-- **Input**: Extend PlayMode tests: player cannot leave the new 60x40 bounds via treeline (drive player at an edge, assert position clamps inside bounds); camera confiner bound check if cheap. Then rebuild WebGL (`run-unity.bat ... -executeMethod Reebles2D.Editor.WebBuild.Build -quit`, WINDOWS log path like `C:\Source\game-reebles-2d\webgl-build.log`), `python3 tools/deploy-pages.py`, verify new gh-pages commit + live URL 200.
-- **Exit criteria**: PlayMode suite green incl. new bounds test; new gh-pages commit; `curl -sI https://spb87.github.io/game-reebles-2d/` → 200.
-- **Max new lines**: ~120
+- **Files allowed**: `game/Assets/Scripts/Interaction/*` (new asmdef `Reebles2D.Interaction` following the Player/UI asmdef pattern + update test asmdef refs), `game/Assets/Editor/VillageSceneBuilder.cs`, `game/Assets/Tests/PlayMode/*.cs`
+- **Input**: `Interactable` MonoBehaviour: `[SerializeField] interactRadius`, `[SerializeField] string promptVerb` ('Talk'/'Pick up'), UnityEvent or virtual `Interact()`. `Interactor` on the player prefab: finds nearest Interactable within its radius (Physics2D.OverlapCircle against a dedicated interactable trigger collider or tagged objects — pick the simpler), exposes CurrentTarget, fires `target.Interact()` when the `Interact` action triggers (same Input System action already bound to E/gamepad/mobile button). Prompt UI: floating indicator above the current target (sprite-based prompt — a small '!'/'E' bubble; sprite import or procedural texture, more reliable than TMP in WebGL). Builder: add Interactor + prompt wiring to player prefab; add a test interactable on the fountain (flavor line, promptVerb 'Admire').
+- **Exit criteria**: builder exits 0; scene regenerated; PlayMode suite green incl. NEW tests (nearest-in-range detection; Interact action fires target).
+- **Max new lines**: ~300
 - **Status**: in progress
-- **Git**: `test(REEB-149): verify expanded world bounds + redeploy`
+- **Git**: `feat(REEB-150): add interactable system + prompt UI`
