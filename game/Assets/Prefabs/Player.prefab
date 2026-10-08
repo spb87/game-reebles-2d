@@ -190,7 +190,7 @@ MonoBehaviour:
   frontSprite: {fileID: 21300000, guid: f7f128bd12723b04f89c48cf3fd1bcf1, type: 3}
   backSprite: {fileID: 21300000, guid: bfa45c55dfe60234fa609ede641f6970, type: 3}
   leftSprite: {fileID: 21300000, guid: 40504f5d2d76d5442bcbb7237bc7d62b, type: 3}
-  rightSprite: {fileID: 21300000, guid: bc44d678057bee5498cc6fd298d25e04, type: 3}
+  rightSprite: {fileID: 0}
   deadZone: 0.1
 --- !u!1 &7033795419808663639
 GameObject:

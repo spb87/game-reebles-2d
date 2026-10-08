@@ -13,6 +13,13 @@
   left of body centroid), TL = right-facing (dark centroid right of center).
   Each cell was cropped to its alpha bbox + 8px padding and saved as
   `reeble_{front,back,left,right}.png` in `game/Assets/Art/Sprites/`.
+- Post-deploy review (REEB-143 follow-up): the TL cell saved as
+  `reeble_right.png` turned out to be another FRONT view, not a right
+  profile — dark-feature centroid ~0.54 (face centered), vs `reeble_left.png`
+  centroid ~0.24 (true left profile). The right cell was discarded from use;
+  `reeble_right.png` remains on disk but is no longer wired into the player
+  prefab. Right-facing is rendered as the left sprite with `flipX = true`
+  (PlayerFacing's missing-side-sprite fallback).
 
 ## Prompt
 

@@ -66,7 +66,7 @@ namespace Reebles2D.Tests.PlayMode
             return asset;
         }
 
-        private PlayerFacing SpawnPlayer()
+        private PlayerFacing SpawnPlayer(bool wireRight = true)
         {
             var go = new GameObject("Player");
             go.SetActive(false);
@@ -79,7 +79,10 @@ namespace Reebles2D.Tests.PlayMode
             typeof(PlayerFacing).GetField("frontSprite", flags).SetValue(facing, front);
             typeof(PlayerFacing).GetField("backSprite", flags).SetValue(facing, back);
             typeof(PlayerFacing).GetField("leftSprite", flags).SetValue(facing, left);
-            typeof(PlayerFacing).GetField("rightSprite", flags).SetValue(facing, right);
+            if (wireRight)
+            {
+                typeof(PlayerFacing).GetField("rightSprite", flags).SetValue(facing, right);
+            }
             go.SetActive(true);
             player = go;
             return facing;
@@ -114,6 +117,19 @@ namespace Reebles2D.Tests.PlayMode
 
             Assert.That(facing.Facing, Is.EqualTo(Vector2.left));
             Assert.That(player.GetComponent<SpriteRenderer>().sprite, Is.SameAs(left));
+        }
+
+        [UnityTest]
+        public IEnumerator RightInput_WithoutRightSprite_UsesFlippedLeft()
+        {
+            var facing = SpawnPlayer(wireRight: false);
+            HoldKeys(Key.D);
+            yield return null;
+
+            SpriteRenderer renderer = player.GetComponent<SpriteRenderer>();
+            Assert.That(facing.Facing, Is.EqualTo(Vector2.right));
+            Assert.That(renderer.sprite, Is.SameAs(left));
+            Assert.That(renderer.flipX, Is.True);
         }
     }
 }

@@ -103,7 +103,6 @@ namespace Reebles2D.Editor
             Sprite reebleFront = null;
             Sprite reebleBack = null;
             Sprite reebleLeft = null;
-            Sprite reebleRight = null;
             string directionalFrontPath = SpritesFolder + "/reeble_front.png";
             if (AssetDatabase.LoadAssetAtPath<Texture2D>(directionalFrontPath) != null)
             {
@@ -113,8 +112,8 @@ namespace Reebles2D.Editor
                     SpritesFolder + "/reeble_back.png", DirectionalReeblePpu);
                 reebleLeft = EnsureSpriteImport(
                     SpritesFolder + "/reeble_left.png", DirectionalReeblePpu);
-                reebleRight = EnsureSpriteImport(
-                    SpritesFolder + "/reeble_right.png", DirectionalReeblePpu);
+                // reeble_right.png was another front view, not a profile;
+                // right-facing uses the left sprite flipped (rightSprite null).
                 reebleSprite = reebleFront;
             }
             else
@@ -138,7 +137,7 @@ namespace Reebles2D.Editor
             Sprite shadowSprite = CreateShadowSprite("Shadow");
 
             GameObject playerPrefab = BuildPlayerPrefab(
-                reebleSprite, reebleFront, reebleBack, reebleLeft, reebleRight,
+                reebleSprite, reebleFront, reebleBack, reebleLeft, right: null,
                 shadowSprite);
 
             UnityEngine.SceneManagement.Scene scene = EditorSceneManager.NewScene(
