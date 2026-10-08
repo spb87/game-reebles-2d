@@ -24,8 +24,8 @@ A cozy top-down 2D errand game running on a public URL in any browser: the playe
 
 - **Goal**: ONE quest works end-to-end — talk to NPC → dialogue card → fetch marked item → deliver → hearts counter ticks. HUD shows objective + counter + toast.
 - **Proves**: The loop is actually playable; quest-data-as-JSON authoring works (DEC-6).
-- **Features**: TBD — decomposed after M1 go/no-go
-- **Status**: not started
+- **Features**: `m2-world-expansion.md` (REEB-144 — user feedback: world must be explorable beyond the village), `m2-interact-dialogue-npc.md` (REEB-145), `m2-quest-slice.md` (REEB-146)
+- **Status**: in progress — REEB-147…155 sequenced; art pulled forward partially in M1 (first art pass already shipped, REEB-139…143)
 
 ### Milestone 3: Art pipeline + village art pass
 
