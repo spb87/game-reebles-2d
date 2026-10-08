@@ -46,6 +46,15 @@ namespace Reebles2D.Editor
         private const float GroundPpu = 256f;     // backdrop is stretched to map bounds; PPU only sets import scale
         private const float ReeblePpu = 512f;     // ~341px sheet cell -> ~0.67 units
         private const float SingleReeblePpu = 768f; // ~803px single sprite -> ~1 unit
+        private const float DirectionalReeblePpu = 330f; // ~330px view sprites -> ~1 unit
+
+        // Backdrop light comes from upper-right (path edges shade lower-left),
+        // so cast shadows offset down-left of each object's base.
+        private static readonly Vector2 ShadowOffset = new Vector2(-0.18f, -0.16f);
+        private const int ShadowSortingOrder = -9;
+        private const int ShadowTexturePixels = 128;
+        private const float ShadowPpu = 128f;     // 1 unit wide at scale 1
+        private static readonly Color ShadowColor = new Color(0.16f, 0.1f, 0.22f, 0.5f);
 
         // Colliders cover only the base of each sprite (doors/water/fence rails),
         // not the full artwork, so the player can walk in front of roofs.
@@ -91,23 +100,46 @@ namespace Reebles2D.Editor
             Sprite lanternSprite = EnsureSpriteImport(
                 SpritesFolder + "/lantern.png", LanternPpu);
             Sprite reebleSprite;
-            string singleReeblePath = SpritesFolder + "/reeble.png";
-            if (AssetDatabase.LoadAssetAtPath<Texture2D>(singleReeblePath) != null)
+            Sprite reebleFront = null;
+            Sprite reebleBack = null;
+            Sprite reebleLeft = null;
+            Sprite reebleRight = null;
+            string directionalFrontPath = SpritesFolder + "/reeble_front.png";
+            if (AssetDatabase.LoadAssetAtPath<Texture2D>(directionalFrontPath) != null)
             {
-                // Single on-model sprite from the REEB-142 style re-roll; the
-                // sheet is still sliced below but left unused by the prefab.
-                reebleSprite = EnsureSpriteImport(singleReeblePath, SingleReeblePpu);
-                EnsureReebleSheetImport(SpritesFolder + "/reeble_sheet.png", ReeblePpu);
+                // REEB-143 turnaround views supersede the single sprite.
+                reebleFront = EnsureSpriteImport(directionalFrontPath, DirectionalReeblePpu);
+                reebleBack = EnsureSpriteImport(
+                    SpritesFolder + "/reeble_back.png", DirectionalReeblePpu);
+                reebleLeft = EnsureSpriteImport(
+                    SpritesFolder + "/reeble_left.png", DirectionalReeblePpu);
+                reebleRight = EnsureSpriteImport(
+                    SpritesFolder + "/reeble_right.png", DirectionalReeblePpu);
+                reebleSprite = reebleFront;
             }
             else
             {
-                reebleSprite = EnsureReebleSheetImport(
-                    SpritesFolder + "/reeble_sheet.png", ReeblePpu);
+                string singleReeblePath = SpritesFolder + "/reeble.png";
+                if (AssetDatabase.LoadAssetAtPath<Texture2D>(singleReeblePath) != null)
+                {
+                    // Single on-model sprite from the REEB-142 style re-roll; the
+                    // sheet is still sliced below but left unused by the prefab.
+                    reebleSprite = EnsureSpriteImport(singleReeblePath, SingleReeblePpu);
+                    EnsureReebleSheetImport(SpritesFolder + "/reeble_sheet.png", ReeblePpu);
+                }
+                else
+                {
+                    reebleSprite = EnsureReebleSheetImport(
+                        SpritesFolder + "/reeble_sheet.png", ReeblePpu);
+                }
             }
 
             Sprite uiSprite = CreateUiRectSprite("UI_Rect");
+            Sprite shadowSprite = CreateShadowSprite("Shadow");
 
-            GameObject playerPrefab = BuildPlayerPrefab(reebleSprite);
+            GameObject playerPrefab = BuildPlayerPrefab(
+                reebleSprite, reebleFront, reebleBack, reebleLeft, reebleRight,
+                shadowSprite);
 
             UnityEngine.SceneManagement.Scene scene = EditorSceneManager.NewScene(
                 NewSceneSetup.EmptyScene, NewSceneMode.Single);
@@ -118,11 +150,11 @@ namespace Reebles2D.Editor
             CreateScaledSprite("Ground", groundSprite, MapBounds.center,
                 new Vector2(MapBounds.width, MapBounds.height), sortingOrder: -10);
 
-            CreateBuilding("Bakery", bakerySprite, new Vector2(-8f, 5f), new Vector2(4f, 4f));
-            CreateBuilding("Smithy", smithySprite, new Vector2(-8f, -5f), new Vector2(4f, 4f));
-            CreateBuilding("Herbalist", herbalistSprite, new Vector2(8f, 5f), new Vector2(4f, 4f));
-            CreateBuilding("Store", storeSprite, new Vector2(8f, -5f), new Vector2(4f, 4f));
-            CreateBuilding("Inn", innSprite, new Vector2(0f, 7f), new Vector2(6f, 4f));
+            CreateBuilding("Bakery", bakerySprite, new Vector2(-8f, 5f), new Vector2(4f, 4f), shadowSprite);
+            CreateBuilding("Smithy", smithySprite, new Vector2(-8f, -5f), new Vector2(4f, 4f), shadowSprite);
+            CreateBuilding("Herbalist", herbalistSprite, new Vector2(8f, 5f), new Vector2(4f, 4f), shadowSprite);
+            CreateBuilding("Store", storeSprite, new Vector2(8f, -5f), new Vector2(4f, 4f), shadowSprite);
+            CreateBuilding("Inn", innSprite, new Vector2(0f, 7f), new Vector2(6f, 4f), shadowSprite);
 
             GameObject fountain = CreateScaledSprite("Fountain", fountainSprite,
                 Vector3.zero, Vector2.one * 2.5f, sortingOrder: 0);
@@ -130,9 +162,10 @@ namespace Reebles2D.Editor
             float fountainLocalRadius = fountainSprite.bounds.extents.x;
             fountainCollider.radius = fountainLocalRadius * FountainFootprintFraction;
             fountainCollider.offset = new Vector2(0f, -fountainLocalRadius * 0.4f);
+            AddShadow(shadowSprite, Vector2.zero, 2.5f);
 
-            CreateLantern(lanternSprite, new Vector2(-6.6f, 3.2f));
-            CreateLantern(lanternSprite, new Vector2(9.4f, 3.2f));
+            CreateLantern(lanternSprite, new Vector2(-6.6f, 3.2f), shadowSprite);
+            CreateLantern(lanternSprite, new Vector2(9.4f, 3.2f), shadowSprite);
 
             BuildFence(fenceSprite);
 
@@ -356,8 +389,79 @@ namespace Reebles2D.Editor
             return obj;
         }
 
+        /// <summary>
+        /// Generates the shared soft-ellipse shadow sprite: a radial-gradient
+        /// Texture2D, dark purple and ~50% alpha fading to transparent at the
+        /// edge. One asset is reused under every prop and the player.
+        /// </summary>
+        private static Sprite CreateShadowSprite(string name)
+        {
+            string path = GreyboxFolder + "/" + name + ".png";
+            int size = ShadowTexturePixels;
+            Texture2D texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            Color[] pixels = new Color[size * size];
+            float radius = size * 0.5f;
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    float dx = (x + 0.5f - radius) / radius;
+                    float dy = (y + 0.5f - radius) / (radius * 0.5f);
+                    float distance = Mathf.Sqrt(dx * dx + dy * dy);
+                    float falloff = Mathf.Clamp01(1f - distance);
+                    Color c = ShadowColor;
+                    c.a = ShadowColor.a * falloff * falloff;
+                    pixels[y * size + x] = c;
+                }
+            }
+            texture.SetPixels(pixels);
+            texture.Apply();
+            File.WriteAllBytes(path, texture.EncodeToPNG());
+            Object.DestroyImmediate(texture);
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+
+            TextureImporter importer = (TextureImporter)AssetImporter.GetAtPath(path);
+            importer.textureType = TextureImporterType.Sprite;
+            importer.spriteImportMode = SpriteImportMode.Single;
+            importer.spritePixelsPerUnit = ShadowPpu;
+            importer.filterMode = FilterMode.Bilinear;
+            importer.alphaIsTransparency = true;
+            importer.SaveAndReimport();
+
+            Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+            if (sprite == null)
+            {
+                throw new System.InvalidOperationException("Failed to load shadow sprite: " + path);
+            }
+            return sprite;
+        }
+
+        /// <summary>
+        /// Places a flattened shadow sprite <see cref="ShadowOffset"/> down-left
+        /// of <paramref name="basePosition"/>, scaled to the object's footprint.
+        /// </summary>
+        private static void AddShadow(Sprite shadowSprite, Vector2 basePosition,
+            float footprintWidth, Transform parent = null)
+        {
+            GameObject shadow = new GameObject("Shadow");
+            if (parent != null)
+            {
+                shadow.transform.SetParent(parent, false);
+                shadow.transform.localPosition = ShadowOffset;
+                shadow.transform.localScale = new Vector3(footprintWidth, footprintWidth, 1f);
+            }
+            else
+            {
+                shadow.transform.position = basePosition + ShadowOffset;
+                shadow.transform.localScale = new Vector3(footprintWidth, footprintWidth, 1f);
+            }
+            SpriteRenderer renderer = shadow.AddComponent<SpriteRenderer>();
+            renderer.sprite = shadowSprite;
+            renderer.sortingOrder = ShadowSortingOrder;
+        }
+
         private static void CreateBuilding(string name, Sprite sprite,
-            Vector2 position, Vector2 size)
+            Vector2 position, Vector2 size, Sprite shadowSprite)
         {
             GameObject building = CreateScaledSprite(name, sprite, position, size, sortingOrder: 0);
             Vector2 spriteSize = sprite.bounds.size;
@@ -367,11 +471,16 @@ namespace Reebles2D.Editor
                 spriteSize.y * FootprintHeightFraction);
             collider.offset = new Vector2(0f,
                 -spriteSize.y * (0.5f - FootprintHeightFraction * 0.5f));
+            AddShadow(shadowSprite,
+                new Vector2(position.x, position.y - size.y * 0.5f), size.x * FootprintWidthFraction);
         }
 
-        private static void CreateLantern(Sprite sprite, Vector2 position)
+        private static void CreateLantern(Sprite sprite, Vector2 position, Sprite shadowSprite)
         {
-            CreateScaledSprite("Lantern", sprite, position, Vector2.one * 1f, sortingOrder: 1);
+            const float lanternSize = 1f;
+            CreateScaledSprite("Lantern", sprite, position, Vector2.one * lanternSize, sortingOrder: 1);
+            AddShadow(shadowSprite,
+                new Vector2(position.x, position.y - lanternSize * 0.5f), lanternSize * FootprintWidthFraction);
         }
 
         /// <summary>
@@ -539,7 +648,8 @@ namespace Reebles2D.Editor
             button.controlPath = "<Gamepad>/buttonEast";
         }
 
-        private static GameObject BuildPlayerPrefab(Sprite sprite)
+        private static GameObject BuildPlayerPrefab(Sprite sprite,
+            Sprite front, Sprite back, Sprite left, Sprite right, Sprite shadowSprite)
         {
             GameObject player = new GameObject("Player");
             player.transform.localScale = Vector3.one * 0.8f;
@@ -549,6 +659,12 @@ namespace Reebles2D.Editor
             player.AddComponent<Rigidbody2D>();
             player.AddComponent<CircleCollider2D>();
             Player.PlayerMovement movement = player.AddComponent<Player.PlayerMovement>();
+            Player.PlayerFacing facing = player.AddComponent<Player.PlayerFacing>();
+
+            // Shadow is a child so it follows the player; local scale cancels
+            // the player's 0.8 transform so the ellipse stays ~1 unit wide.
+            AddShadow(shadowSprite, Vector2.zero, 1f / player.transform.localScale.x,
+                player.transform);
 
             InputActionAsset inputActions =
                 AssetDatabase.LoadAssetAtPath<InputActionAsset>(InputActionsPath);
@@ -561,9 +677,26 @@ namespace Reebles2D.Editor
             serialized.FindProperty("inputActions").objectReferenceValue = inputActions;
             serialized.ApplyModifiedPropertiesWithoutUndo();
 
+            SerializedObject serializedFacing = new SerializedObject(facing);
+            serializedFacing.FindProperty("inputActions").objectReferenceValue = inputActions;
+            SetSpriteProperty(serializedFacing, "frontSprite", front);
+            SetSpriteProperty(serializedFacing, "backSprite", back);
+            SetSpriteProperty(serializedFacing, "leftSprite", left);
+            SetSpriteProperty(serializedFacing, "rightSprite", right);
+            serializedFacing.ApplyModifiedPropertiesWithoutUndo();
+
             GameObject prefab = PrefabUtility.SaveAsPrefabAsset(player, PlayerPrefabPath);
             Object.DestroyImmediate(player);
             return prefab;
+        }
+
+        private static void SetSpriteProperty(SerializedObject serialized,
+            string property, Sprite sprite)
+        {
+            if (sprite != null)
+            {
+                serialized.FindProperty(property).objectReferenceValue = sprite;
+            }
         }
     }
 }
