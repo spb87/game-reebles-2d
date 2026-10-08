@@ -4,13 +4,13 @@ Jira-synced snapshot (Mode: jira — DEC-10). The Architect writes the current t
 
 ---
 
-### REEB-151: I2 — Dialogue card UI + DialogueController
+### REEB-152: I3 — Villager NPC placed in scene + wired to dialogue
 
 - **Feature**: REEB-145 (M2: Interaction + dialogue card + first NPC)
 - **Role**: Developer
-- **Files allowed**: `game/Assets/Scripts/UI/*` (DialogueCard.cs, DialogueController.cs in Reebles2D.UI asmdef — may need asmdef ref to Reebles2D.Interaction), `game/Assets/Editor/VillageSceneBuilder.cs`, `game/Assets/Tests/PlayMode/*.cs`
-- **Input**: Dialogue card per design brief: bottom-center uGUI panel on a screen-space-overlay canvas (dark translucent rounded rect — procedural sprite like the PromptBubble routine), name header text + body text + continue affordance. `DialogueCard` view: Show(name, line), Hide; `DialogueController`: OpenDialogue(name, string[] lines), advance on Interact action / pointer click, close at last line. While open, suppress player movement (simplest: `DialogueController.IsOpen` flag that PlayerMovement respects, or disable the Move action map — pick the cleaner). `NpcComponent` MonoBehaviour: displayName + string[] lines; NpcInteractable : Interactable whose Interact() opens the dialogue. Fountain 'Admire' shows a one-line card (name 'Fountain'). Fonts: uGUI built-in LegacyRuntime font is fine for v1 (no TMP). Builder: generate canvas + card (starts hidden) + wire into scene.
-- **Exit criteria**: builder exits 0; scene regenerated; PlayMode green incl. NEW tests (open shows name+line; advance cycles lines; close at end; movement suppressed while open).
-- **Max new lines**: ~350
+- **Files allowed**: `game/Assets/Editor/VillageSceneBuilder.cs`, `game/Assets/Prefabs/Npc.prefab` (new generated), generated `Village.unity`, `game/Assets/Tests/PlayMode/*.cs`
+- **Input**: Extend the builder: generate `Npc.prefab` — `npc_villager.png` sprite (EnsureSpriteImport if needed) + CircleCollider2D footprint blocker + `NpcComponent` ('Marla the Baker' + 2-3 cozy lines) + `NpcInteractable` (promptVerb 'Talk', radius ~1.5-2) + shared shadow child at feet. Place ONE instance in `Village.unity` near the bakery door facing the plaza. NPC is static (wander = M4). PlayMode test: player in range → prompt; Interact → card opens with 'Marla' name + line; advance → closes. Also verify the scene YAML references the prefab instance.
+- **Exit criteria**: scene has the NPC at the bakery wired to dialogue; PlayMode green incl. talk test; builder exits 0.
+- **Max new lines**: ~150
 - **Status**: in progress
-- **Git**: `feat(REEB-151): add dialogue card UI + controller`
+- **Git**: `feat(REEB-152): add villager NPC wired to dialogue`
