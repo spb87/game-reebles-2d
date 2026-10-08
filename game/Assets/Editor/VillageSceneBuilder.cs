@@ -33,7 +33,18 @@ namespace Reebles2D.Editor
         private const string SceneFolder = "Assets/Scenes";
         private const string ScenePath = SceneFolder + "/Village.unity";
         private const string PlayerPrefabPath = PrefabFolder + "/Player.prefab";
+        private const string NpcPrefabPath = PrefabFolder + "/Npc.prefab";
         private const string InputActionsPath = "Assets/Input/ReeblesInput.inputactions";
+
+        // Villager NPC (REEB-152): imported large like the props, then scaled to
+        // a ~1.2x-reeble world height. The solid footprint circle blocks the
+        // player; the Talk radius is generous so she is easy to approach.
+        private const float NpcPpu = 512f;
+        private const float NpcHeight = 1.2f;
+        private const float NpcFootprintRadius = 0.35f;
+        private const float NpcInteractRadius = 1.75f;
+        private const float NpcShadowWidth = 0.8f;
+        private const float NpcDoorOffset = 1.5f;
 
         private const int UiSpritePixels = 16;
 
@@ -168,6 +179,8 @@ namespace Reebles2D.Editor
                 SpritesFolder + "/flowers.png", PropPpu);
             Sprite lanternSprite = EnsureSpriteImport(
                 SpritesFolder + "/lantern.png", LanternPpu);
+            Sprite villagerSprite = EnsureSpriteImport(
+                SpritesFolder + "/npc_villager.png", NpcPpu);
             Sprite reebleSprite;
             Sprite reebleFront = null;
             Sprite reebleBack = null;
@@ -210,6 +223,7 @@ namespace Reebles2D.Editor
             GameObject playerPrefab = BuildPlayerPrefab(
                 reebleSprite, reebleFront, reebleBack, reebleLeft, right: null,
                 shadowSprite, promptSprite);
+            GameObject npcPrefab = BuildNpcPrefab(villagerSprite, shadowSprite);
 
             UnityEngine.SceneManagement.Scene scene = EditorSceneManager.NewScene(
                 NewSceneSetup.EmptyScene, NewSceneMode.Single);
@@ -220,7 +234,9 @@ namespace Reebles2D.Editor
             CreateScaledSprite("Ground", groundSprite, MapBounds.center,
                 new Vector2(MapBounds.width, MapBounds.height), sortingOrder: -10);
 
-            CreateBuilding("Bakery", bakerySprite, new Vector2(-8f, 5f), new Vector2(4f, 4f), shadowSprite);
+            Vector2 bakeryPosition = new Vector2(-8f, 5f);
+            Vector2 bakerySize = new Vector2(4f, 4f);
+            CreateBuilding("Bakery", bakerySprite, bakeryPosition, bakerySize, shadowSprite);
             CreateBuilding("Smithy", smithySprite, new Vector2(-8f, -5f), new Vector2(4f, 4f), shadowSprite);
             CreateBuilding("Herbalist", herbalistSprite, new Vector2(8f, 5f), new Vector2(4f, 4f), shadowSprite);
             CreateBuilding("Store", storeSprite, new Vector2(8f, -5f), new Vector2(4f, 4f), shadowSprite);
@@ -261,6 +277,13 @@ namespace Reebles2D.Editor
             BuildTreeline(treeOakSprite, treePineSprite, treeRoundSprite, shadowSprite);
             ScatterOutskirtsProps(shadowSprite, treeOakSprite, treePineSprite,
                 treeRoundSprite, bushSprite, berryBushSprite, rockSprite, flowersSprite);
+
+            // Marla stands just outside the bakery's front face, a short step
+            // toward the plaza so she greets players crossing the square.
+            Vector2 npcPosition = bakeryPosition
+                - new Vector2(0f, bakerySize.y * 0.5f + NpcDoorOffset);
+            GameObject npc = (GameObject)PrefabUtility.InstantiatePrefab(npcPrefab, scene);
+            npc.transform.position = npcPosition;
 
             GameObject player = (GameObject)PrefabUtility.InstantiatePrefab(playerPrefab, scene);
             player.transform.position = new Vector3(0f, -3f, 0f);
@@ -591,13 +614,14 @@ namespace Reebles2D.Editor
         /// of <paramref name="basePosition"/>, scaled to the object's footprint.
         /// </summary>
         private static void AddShadow(Sprite shadowSprite, Vector2 basePosition,
-            float footprintWidth, Transform parent = null)
+            float footprintWidth, Transform parent = null,
+            Vector2 extraLocalOffset = default)
         {
             GameObject shadow = new GameObject("Shadow");
             if (parent != null)
             {
                 shadow.transform.SetParent(parent, false);
-                shadow.transform.localPosition = ShadowOffset;
+                shadow.transform.localPosition = ShadowOffset + extraLocalOffset;
                 shadow.transform.localScale = new Vector3(footprintWidth, footprintWidth, 1f);
             }
             else
@@ -1077,6 +1101,61 @@ namespace Reebles2D.Editor
 
             GameObject prefab = PrefabUtility.SaveAsPrefabAsset(player, PlayerPrefabPath);
             Object.DestroyImmediate(player);
+            return prefab;
+        }
+
+        /// <summary>
+        /// Generates Npc.prefab: the villager sprite scaled to
+        /// <see cref="NpcHeight"/>, a solid circle footprint so she blocks
+        /// movement, an <see cref="UI.NpcComponent"/> holding Marla's lines, an
+        /// <see cref="UI.NpcInteractable"/> that opens the dialogue card, and a
+        /// shadow child at her feet.
+        /// </summary>
+        private static GameObject BuildNpcPrefab(Sprite sprite, Sprite shadowSprite)
+        {
+            GameObject npc = new GameObject("Npc");
+            SpriteRenderer renderer = npc.AddComponent<SpriteRenderer>();
+            renderer.sprite = sprite;
+            renderer.sortingOrder = 1;
+            Vector2 spriteSize = sprite.bounds.size;
+            float scale = NpcHeight / spriteSize.y;
+            npc.transform.localScale = Vector3.one * scale;
+
+            // Collider lives in local units, so world size is radius * scale.
+            // Centered on the feet — the lower edge of the sprite rect.
+            CircleCollider2D collider = npc.AddComponent<CircleCollider2D>();
+            collider.radius = NpcFootprintRadius / scale;
+            collider.offset = new Vector2(0f,
+                -spriteSize.y * 0.5f + collider.radius * 0.5f);
+
+            UI.NpcComponent component = npc.AddComponent<UI.NpcComponent>();
+            SerializedObject serializedNpc = new SerializedObject(component);
+            serializedNpc.FindProperty("displayName").stringValue = "Marla the Baker";
+            SerializedProperty lines = serializedNpc.FindProperty("lines");
+            lines.arraySize = 3;
+            lines.GetArrayElementAtIndex(0).stringValue =
+                "Fresh bread this morning — the rye's still warm, if you've a mind.";
+            lines.GetArrayElementAtIndex(1).stringValue =
+                "That oven keeps the whole street cozy through the cold nights.";
+            lines.GetArrayElementAtIndex(2).stringValue =
+                "Mind the flour on your sleeves, dear. It gets everywhere.";
+            serializedNpc.ApplyModifiedPropertiesWithoutUndo();
+
+            UI.NpcInteractable interactable = npc.AddComponent<UI.NpcInteractable>();
+            SerializedObject serializedInteract = new SerializedObject(interactable);
+            serializedInteract.FindProperty("promptVerb").stringValue = "Talk";
+            serializedInteract.FindProperty("interactRadius").floatValue = NpcInteractRadius;
+            serializedInteract.FindProperty("promptHeight").floatValue = NpcHeight + 0.2f;
+            serializedInteract.FindProperty("npc").objectReferenceValue = component;
+            serializedInteract.ApplyModifiedPropertiesWithoutUndo();
+
+            // Shadow scale cancels the NPC's transform so the ellipse lands at
+            // NpcShadowWidth world units under her feet.
+            AddShadow(shadowSprite, Vector2.zero, NpcShadowWidth / scale,
+                npc.transform, new Vector2(0f, -spriteSize.y * 0.5f));
+
+            GameObject prefab = PrefabUtility.SaveAsPrefabAsset(npc, NpcPrefabPath);
+            Object.DestroyImmediate(npc);
             return prefab;
         }
 
