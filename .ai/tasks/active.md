@@ -4,13 +4,13 @@ Jira-synced snapshot (Mode: jira — DEC-10). The Architect writes the current t
 
 ---
 
-### REEB-152: I3 — Villager NPC placed in scene + wired to dialogue
+### REEB-153: Q1 — Quest JSON schema + QuestLibrary + errand_berries.json
 
-- **Feature**: REEB-145 (M2: Interaction + dialogue card + first NPC)
+- **Feature**: REEB-146 (M2: One quest end-to-end — vertical slice)
 - **Role**: Developer
-- **Files allowed**: `game/Assets/Editor/VillageSceneBuilder.cs`, `game/Assets/Prefabs/Npc.prefab` (new generated), generated `Village.unity`, `game/Assets/Tests/PlayMode/*.cs`
-- **Input**: Extend the builder: generate `Npc.prefab` — `npc_villager.png` sprite (EnsureSpriteImport if needed) + CircleCollider2D footprint blocker + `NpcComponent` ('Marla the Baker' + 2-3 cozy lines) + `NpcInteractable` (promptVerb 'Talk', radius ~1.5-2) + shared shadow child at feet. Place ONE instance in `Village.unity` near the bakery door facing the plaza. NPC is static (wander = M4). PlayMode test: player in range → prompt; Interact → card opens with 'Marla' name + line; advance → closes. Also verify the scene YAML references the prefab instance.
-- **Exit criteria**: scene has the NPC at the bakery wired to dialogue; PlayMode green incl. talk test; builder exits 0.
-- **Max new lines**: ~150
+- **Files allowed**: `game/Assets/Scripts/Quests/*` (new asmdef `Reebles2D.Quests`, autoReferenced per existing pattern), `game/Assets/Data/Quests/errand_berries.json` (+meta), `game/Assets/Tests/EditMode/QuestSchemaTests.cs` (+ update EditMode asmdef refs)
+- **Input**: Quest schema (DEC-6 — data-driven, JsonUtility-serializable, flat): `id`, `giverNpcId`, `title`, `objectiveText`, dialogue arrays `offerLines`/`activeLines`/`completeLines`, `fetchItemId`, `fetchTargetId`, `rewardHearts`. `QuestLibrary`: loads all TextAssets under `Assets/Data/Quests/` (or a `[SerializeField] TextAsset[]` manifest — pick the approach that works in WebGL; Resources folder if streaming assets is awkward — note: plain `Assets/Data/` files are NOT included in builds unless in Resources or referenced — use `Assets/Resources/Quests/` if needed for runtime loading; schema tests just need file parsing). `errand_berries.json`: id `errand_berries`, giver `marla_baker`, item `berries`, target `berry_bush`, reward 1 heart, cozy lines. EditMode tests: every quest JSON parses via JsonUtility; required fields non-empty; rewardHearts > 0.
+- **Exit criteria**: EditMode suite green incl. new schema tests; errand_berries.json committed + parseable; asmdef wired.
+- **Max new lines**: ~250
 - **Status**: in progress
-- **Git**: `feat(REEB-152): add villager NPC wired to dialogue`
+- **Git**: `feat(REEB-153): add quest JSON schema + first errand`
