@@ -3,7 +3,8 @@
     "rootNamespace": "Reebles2D.UI",
     "references": [
         "Unity.InputSystem",
-        "UnityEngine.UI"
+        "UnityEngine.UI",
+        "Reebles2D.Interaction"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

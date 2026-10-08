@@ -116,6 +116,20 @@ namespace Reebles2D.Editor
         private static readonly Color ControlAreaColor = new Color(1f, 1f, 1f, 0.12f);
         private static readonly Color ControlVisualColor = new Color(1f, 1f, 1f, 0.45f);
 
+        // Dialogue card: bottom-center panel on its own overlay canvas,
+        // layered under the mobile controls canvas (sortingOrder 100).
+        private const int DialogueCanvasSortingOrder = 90;
+        private const int CardSpritePixels = 96;
+        private const float CardCornerRadius = 20f;
+        private const int CardSpriteBorder = 24;
+        private static readonly Vector2 CardSize = new Vector2(900f, 220f);
+        private const float CardBottomMargin = 24f;
+        private const float CardPadding = 28f;
+        private static readonly Color CardColor = new Color(0.08f, 0.06f, 0.12f, 0.92f);
+        private static readonly Color CardNameColor = new Color(1f, 0.9f, 0.6f, 1f);
+        private static readonly Color CardBodyColor = new Color(0.95f, 0.93f, 0.98f, 1f);
+        private static readonly Color CardHintColor = new Color(1f, 1f, 1f, 0.55f);
+
         /// <summary>Regenerates the Village scene and Player prefab from promoted art.</summary>
         public static void Build()
         {
@@ -191,6 +205,7 @@ namespace Reebles2D.Editor
             Sprite uiSprite = CreateUiRectSprite("UI_Rect");
             Sprite shadowSprite = CreateShadowSprite("Shadow");
             Sprite promptSprite = CreatePromptSprite("PromptBubble");
+            Sprite cardSprite = CreateCardSprite("DialogueCardPanel");
 
             GameObject playerPrefab = BuildPlayerPrefab(
                 reebleSprite, reebleFront, reebleBack, reebleLeft, right: null,
@@ -219,16 +234,25 @@ namespace Reebles2D.Editor
             fountainCollider.offset = new Vector2(0f, -fountainLocalRadius * 0.4f);
             AddShadow(shadowSprite, Vector2.zero, 2.5f);
 
-            // Test interactable — the solid footprint collider doubles as the
+            // Flavor interactable — Admiring the fountain opens a one-line
+            // dialogue card. The solid footprint collider doubles as the
             // OverlapCircleAll hit target.
-            Interaction.Interactable fountainInteract =
-                fountain.AddComponent<Interaction.Interactable>();
+            UI.NpcComponent fountainNpc = fountain.AddComponent<UI.NpcComponent>();
+            SerializedObject serializedNpc = new SerializedObject(fountainNpc);
+            serializedNpc.FindProperty("displayName").stringValue = "Fountain";
+            SerializedProperty fountainLines = serializedNpc.FindProperty("lines");
+            fountainLines.arraySize = 1;
+            fountainLines.GetArrayElementAtIndex(0).stringValue =
+                "The fountain burbles quietly in the square.";
+            serializedNpc.ApplyModifiedPropertiesWithoutUndo();
+
+            UI.NpcInteractable fountainInteract =
+                fountain.AddComponent<UI.NpcInteractable>();
             SerializedObject serializedInteract = new SerializedObject(fountainInteract);
             serializedInteract.FindProperty("promptVerb").stringValue = "Admire";
-            serializedInteract.FindProperty("flavorLine").stringValue =
-                "The fountain burbles quietly in the square.";
             serializedInteract.FindProperty("interactRadius").floatValue = 2f;
             serializedInteract.FindProperty("promptHeight").floatValue = 1.4f;
+            serializedInteract.FindProperty("npc").objectReferenceValue = fountainNpc;
             serializedInteract.ApplyModifiedPropertiesWithoutUndo();
 
             CreateLantern(lanternSprite, new Vector2(-6.6f, 3.2f), shadowSprite);
@@ -262,6 +286,7 @@ namespace Reebles2D.Editor
             confiner.BoundingShape2D = boundsCollider;
 
             BuildMobileControls(uiSprite);
+            BuildDialogueUi(cardSprite);
 
             EditorSceneManager.SaveScene(scene, ScenePath);
             AssetDatabase.SaveAssets();
@@ -765,6 +790,145 @@ namespace Reebles2D.Editor
                 default:
                     return BushHeight;
             }
+        }
+
+        /// <summary>
+        /// Generates the rounded-corner panel sprite for the dialogue card,
+        /// baked white (tinted via Image.color) with a 24px border so the Image
+        /// can 9-slice to any card size without distorting the corners.
+        /// </summary>
+        private static Sprite CreateCardSprite(string name)
+        {
+            string path = GreyboxFolder + "/" + name + ".png";
+            int size = CardSpritePixels;
+            Texture2D texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            Color[] pixels = new Color[size * size];
+            float half = size * 0.5f;
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    // Signed distance to a rounded rectangle centered on the texel.
+                    float qx = Mathf.Abs(x + 0.5f - half) - (half - CardCornerRadius);
+                    float qy = Mathf.Abs(y + 0.5f - half) - (half - CardCornerRadius);
+                    float distance = new Vector2(Mathf.Max(qx, 0f), Mathf.Max(qy, 0f)).magnitude
+                        + Mathf.Min(Mathf.Max(qx, qy), 0f) - CardCornerRadius;
+                    float alpha = Mathf.Clamp01(-distance);
+                    pixels[y * size + x] = new Color(1f, 1f, 1f, alpha);
+                }
+            }
+            texture.SetPixels(pixels);
+            texture.Apply();
+            File.WriteAllBytes(path, texture.EncodeToPNG());
+            Object.DestroyImmediate(texture);
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+
+            TextureImporter importer = (TextureImporter)AssetImporter.GetAtPath(path);
+            importer.textureType = TextureImporterType.Sprite;
+            importer.spriteImportMode = SpriteImportMode.Single;
+            importer.spritePixelsPerUnit = CardSpritePixels;
+            importer.spriteBorder = new Vector4(
+                CardSpriteBorder, CardSpriteBorder, CardSpriteBorder, CardSpriteBorder);
+            importer.filterMode = FilterMode.Bilinear;
+            importer.alphaIsTransparency = true;
+            importer.SaveAndReimport();
+
+            Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+            if (sprite == null)
+            {
+                throw new System.InvalidOperationException("Failed to load card sprite: " + path);
+            }
+            return sprite;
+        }
+
+        /// <summary>
+        /// Builds the dialogue overlay canvas: an inactive bottom-center card
+        /// (name header + body line + continue hint) plus the
+        /// <see cref="UI.DialogueController"/> that drives it.
+        /// </summary>
+        private static void BuildDialogueUi(Sprite cardSprite)
+        {
+            GameObject canvasObject = new GameObject("DialogueUI");
+            Canvas canvas = canvasObject.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = DialogueCanvasSortingOrder;
+            CanvasScaler scaler = canvasObject.AddComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920f, 1080f);
+            canvasObject.AddComponent<GraphicRaycaster>();
+
+            Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+
+            GameObject card = new GameObject("DialogueCard");
+            RectTransform cardRect = card.AddComponent<RectTransform>();
+            cardRect.SetParent(canvasObject.transform, false);
+            cardRect.anchorMin = new Vector2(0.5f, 0f);
+            cardRect.anchorMax = new Vector2(0.5f, 0f);
+            cardRect.pivot = new Vector2(0.5f, 0f);
+            cardRect.anchoredPosition = new Vector2(0f, CardBottomMargin);
+            cardRect.sizeDelta = CardSize;
+            Image panel = card.AddComponent<Image>();
+            panel.sprite = cardSprite;
+            panel.type = Image.Type.Sliced;
+            panel.color = CardColor;
+            panel.raycastTarget = false;
+
+            Text nameText = CreateCardText(cardRect, "NameText", font, 30, CardNameColor,
+                TextAnchor.MiddleLeft, FontStyle.Bold,
+                new Rect(CardPadding, CardSize.y - 64f, CardSize.x - CardPadding * 2f, 40f));
+            Text bodyText = CreateCardText(cardRect, "BodyText", font, 26, CardBodyColor,
+                TextAnchor.UpperLeft, FontStyle.Normal,
+                new Rect(CardPadding, CardPadding + 24f, CardSize.x - CardPadding * 2f, CardSize.y - 100f));
+            CreateCardText(cardRect, "ContinueHint", font, 20, CardHintColor,
+                TextAnchor.MiddleRight, FontStyle.Italic,
+                new Rect(CardSize.x - CardPadding - 140f, 8f, 140f, 28f))
+                .text = "...";
+
+            card.SetActive(false);
+
+            UI.DialogueCard cardView = canvasObject.AddComponent<UI.DialogueCard>();
+            SerializedObject serializedCard = new SerializedObject(cardView);
+            serializedCard.FindProperty("cardRoot").objectReferenceValue = card;
+            serializedCard.FindProperty("nameText").objectReferenceValue = nameText;
+            serializedCard.FindProperty("bodyText").objectReferenceValue = bodyText;
+            serializedCard.ApplyModifiedPropertiesWithoutUndo();
+
+            UI.DialogueController controller =
+                canvasObject.AddComponent<UI.DialogueController>();
+            SerializedObject serializedController = new SerializedObject(controller);
+            serializedController.FindProperty("card").objectReferenceValue = cardView;
+            serializedController.FindProperty("inputActions").objectReferenceValue =
+                AssetDatabase.LoadAssetAtPath<InputActionAsset>(InputActionsPath);
+            serializedController.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        /// <summary>
+        /// Creates a uGUI Text inside the dialogue card. <paramref name="rect"/>
+        /// is a pixel rectangle in card space measured from the card's
+        /// bottom-left corner.
+        /// </summary>
+        private static Text CreateCardText(RectTransform parent, string name,
+            Font font, int fontSize, Color color, TextAnchor alignment,
+            FontStyle style, Rect rect)
+        {
+            GameObject textObject = new GameObject(name);
+            RectTransform textRect = textObject.AddComponent<RectTransform>();
+            textRect.SetParent(parent, false);
+            textRect.anchorMin = Vector2.zero;
+            textRect.anchorMax = Vector2.zero;
+            textRect.pivot = Vector2.zero;
+            textRect.anchoredPosition = rect.position;
+            textRect.sizeDelta = rect.size;
+            Text text = textObject.AddComponent<Text>();
+            text.font = font;
+            text.fontSize = fontSize;
+            text.color = color;
+            text.alignment = alignment;
+            text.fontStyle = style;
+            text.horizontalOverflow = HorizontalWrapMode.Wrap;
+            text.verticalOverflow = VerticalWrapMode.Overflow;
+            text.raycastTarget = false;
+            return text;
         }
 
         private static void BuildMobileControls(Sprite sprite)
