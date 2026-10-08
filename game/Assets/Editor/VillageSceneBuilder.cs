@@ -190,10 +190,11 @@ namespace Reebles2D.Editor
 
             Sprite uiSprite = CreateUiRectSprite("UI_Rect");
             Sprite shadowSprite = CreateShadowSprite("Shadow");
+            Sprite promptSprite = CreatePromptSprite("PromptBubble");
 
             GameObject playerPrefab = BuildPlayerPrefab(
                 reebleSprite, reebleFront, reebleBack, reebleLeft, right: null,
-                shadowSprite);
+                shadowSprite, promptSprite);
 
             UnityEngine.SceneManagement.Scene scene = EditorSceneManager.NewScene(
                 NewSceneSetup.EmptyScene, NewSceneMode.Single);
@@ -217,6 +218,18 @@ namespace Reebles2D.Editor
             fountainCollider.radius = fountainLocalRadius * FountainFootprintFraction;
             fountainCollider.offset = new Vector2(0f, -fountainLocalRadius * 0.4f);
             AddShadow(shadowSprite, Vector2.zero, 2.5f);
+
+            // Test interactable — the solid footprint collider doubles as the
+            // OverlapCircleAll hit target.
+            Interaction.Interactable fountainInteract =
+                fountain.AddComponent<Interaction.Interactable>();
+            SerializedObject serializedInteract = new SerializedObject(fountainInteract);
+            serializedInteract.FindProperty("promptVerb").stringValue = "Admire";
+            serializedInteract.FindProperty("flavorLine").stringValue =
+                "The fountain burbles quietly in the square.";
+            serializedInteract.FindProperty("interactRadius").floatValue = 2f;
+            serializedInteract.FindProperty("promptHeight").floatValue = 1.4f;
+            serializedInteract.ApplyModifiedPropertiesWithoutUndo();
 
             CreateLantern(lanternSprite, new Vector2(-6.6f, 3.2f), shadowSprite);
             CreateLantern(lanternSprite, new Vector2(9.4f, 3.2f), shadowSprite);
@@ -493,6 +506,62 @@ namespace Reebles2D.Editor
         }
 
         /// <summary>
+        /// Generates the interact prompt bubble: a soft-edged disc with a dark
+        /// "!" glyph. Procedural like the shadow so no promoted art is needed.
+        /// </summary>
+        private static Sprite CreatePromptSprite(string name)
+        {
+            const int size = 64;
+            const float bubbleRadius = 27f;
+            const float bubbleCenterY = 32f;
+            string path = GreyboxFolder + "/" + name + ".png";
+            Texture2D texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            Color[] pixels = new Color[size * size];
+            Color bubbleColor = new Color(1f, 0.95f, 0.6f, 0.95f);
+            Color glyphColor = new Color(0.2f, 0.12f, 0.25f, 1f);
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    float dx = x + 0.5f - size * 0.5f;
+                    float dy = y + 0.5f - bubbleCenterY;
+                    float distance = Mathf.Sqrt(dx * dx + dy * dy);
+                    if (distance > bubbleRadius)
+                    {
+                        continue;
+                    }
+                    float edge = Mathf.Clamp01(bubbleRadius - distance);
+                    Color c = bubbleColor;
+                    c.a *= edge;
+                    // "!" glyph in texture space: bar above, dot below.
+                    bool bar = Mathf.Abs(dx) < 3f && dy > 2f && dy < 16f;
+                    bool dot = dx * dx + (dy + 10f) * (dy + 10f) < 16f;
+                    pixels[y * size + x] = (bar || dot) ? glyphColor : c;
+                }
+            }
+            texture.SetPixels(pixels);
+            texture.Apply();
+            File.WriteAllBytes(path, texture.EncodeToPNG());
+            Object.DestroyImmediate(texture);
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+
+            TextureImporter importer = (TextureImporter)AssetImporter.GetAtPath(path);
+            importer.textureType = TextureImporterType.Sprite;
+            importer.spriteImportMode = SpriteImportMode.Single;
+            importer.spritePixelsPerUnit = size;
+            importer.filterMode = FilterMode.Bilinear;
+            importer.alphaIsTransparency = true;
+            importer.SaveAndReimport();
+
+            Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+            if (sprite == null)
+            {
+                throw new System.InvalidOperationException("Failed to load prompt sprite: " + path);
+            }
+            return sprite;
+        }
+
+        /// <summary>
         /// Places a flattened shadow sprite <see cref="ShadowOffset"/> down-left
         /// of <paramref name="basePosition"/>, scaled to the object's footprint.
         /// </summary>
@@ -648,6 +717,20 @@ namespace Reebles2D.Editor
                 AddShadow(shadowSprite,
                     new Vector2(position.x, position.y - height * 0.5f),
                     PropFootprintRadius * 2f);
+
+                if (kind == OutskirtsProp.BerryBush)
+                {
+                    // REEB-154 wires actual pickup; for now Interact() only logs.
+                    Interaction.Interactable berryInteract =
+                        prop.AddComponent<Interaction.Interactable>();
+                    SerializedObject serializedBerry = new SerializedObject(berryInteract);
+                    serializedBerry.FindProperty("promptVerb").stringValue = "Pick berries";
+                    serializedBerry.FindProperty("flavorLine").stringValue =
+                        "The berries are not quite ripe yet.";
+                    serializedBerry.FindProperty("interactRadius").floatValue = 1.6f;
+                    serializedBerry.FindProperty("promptHeight").floatValue = 0.8f;
+                    serializedBerry.ApplyModifiedPropertiesWithoutUndo();
+                }
             }
         }
 
@@ -772,7 +855,8 @@ namespace Reebles2D.Editor
         }
 
         private static GameObject BuildPlayerPrefab(Sprite sprite,
-            Sprite front, Sprite back, Sprite left, Sprite right, Sprite shadowSprite)
+            Sprite front, Sprite back, Sprite left, Sprite right,
+            Sprite shadowSprite, Sprite promptSprite)
         {
             GameObject player = new GameObject("Player");
             player.transform.localScale = Vector3.one * 0.8f;
@@ -783,6 +867,19 @@ namespace Reebles2D.Editor
             player.AddComponent<CircleCollider2D>();
             Player.PlayerMovement movement = player.AddComponent<Player.PlayerMovement>();
             Player.PlayerFacing facing = player.AddComponent<Player.PlayerFacing>();
+            Interaction.Interactor interactor =
+                player.AddComponent<Interaction.Interactor>();
+
+            // Single shared prompt bubble: a world-space child the Interactor
+            // repositions over the current target. ~0.4 world units after
+            // cancelling the player's 0.8 scale.
+            GameObject promptObject = new GameObject("InteractPrompt");
+            promptObject.transform.SetParent(player.transform, false);
+            promptObject.transform.localScale = Vector3.one * 0.5f;
+            SpriteRenderer promptRenderer = promptObject.AddComponent<SpriteRenderer>();
+            promptRenderer.sprite = promptSprite;
+            promptRenderer.sortingOrder = 5;
+            promptObject.SetActive(false);
 
             // Shadow is a child so it follows the player; local scale cancels
             // the player's 0.8 transform so the ellipse stays ~1 unit wide.
@@ -807,6 +904,12 @@ namespace Reebles2D.Editor
             SetSpriteProperty(serializedFacing, "leftSprite", left);
             SetSpriteProperty(serializedFacing, "rightSprite", right);
             serializedFacing.ApplyModifiedPropertiesWithoutUndo();
+
+            SerializedObject serializedInteractor = new SerializedObject(interactor);
+            serializedInteractor.FindProperty("inputActions").objectReferenceValue = inputActions;
+            serializedInteractor.FindProperty("prompt").objectReferenceValue =
+                promptObject.transform;
+            serializedInteractor.ApplyModifiedPropertiesWithoutUndo();
 
             GameObject prefab = PrefabUtility.SaveAsPrefabAsset(player, PlayerPrefabPath);
             Object.DestroyImmediate(player);

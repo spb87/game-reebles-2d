@@ -1,0 +1,14 @@
+{
+    "name": "Reebles2D.Interaction",
+    "rootNamespace": "Reebles2D.Interaction",
+    "references": [
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
