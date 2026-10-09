@@ -9,7 +9,8 @@
         "Reebles2D.Interaction",
         "Reebles2D.Quests",
         "Unity.InputSystem",
-        "Unity.InputSystem.TestFramework"
+        "Unity.InputSystem.TestFramework",
+        "Unity.Cinemachine"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

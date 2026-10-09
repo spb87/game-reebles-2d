@@ -313,11 +313,18 @@ namespace Reebles2D.Editor
             camera.orthographic = true;
             camera.orthographicSize = 5f;
             cameraObject.transform.position = new Vector3(0f, 0f, -10f);
+            cameraObject.AddComponent<CinemachineBrain>();
 
             GameObject vcamObject = new GameObject("PlayerCamera");
             CinemachineCamera vcam = vcamObject.AddComponent<CinemachineCamera>();
             vcam.Follow = player.transform;
             vcam.Lens.OrthographicSize = 5f;
+            // PositionComposer is what actually moves the camera toward Follow;
+            // zero dead zone keeps the reeble centered while walking (REEB-156).
+            CinemachinePositionComposer composer =
+                vcamObject.AddComponent<CinemachinePositionComposer>();
+            composer.Composition.DeadZone.Enabled = false;
+            composer.Composition.DeadZone.Size = Vector2.zero;
             CinemachineConfiner2D confiner = vcamObject.AddComponent<CinemachineConfiner2D>();
             confiner.BoundingShape2D = boundsCollider;
 
