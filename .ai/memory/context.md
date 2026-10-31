@@ -63,3 +63,15 @@ M2 vertical slice COMPLETE + deployed: world expanded 30x20→60x40 w/ treeline 
 - Interactables found via OverlapCircleAll on existing solid colliders, filtered by GetComponentInParent<Interactable> — no separate trigger layer.
 - DialogueController disables the Move action while open (no Player→UI dep).
 - NpcInteractable has LastClosedFrame guard — needed when interactables trigger on the same Interact press that closes a card.
+
+
+## Visual spike (REEB-157/158, 2026-10-31)
+
+Post-M2 user review: visuals too primitive (flat, no shadows). Researched AI game-creation harnesses — "Fable"/"Astra" are frontier MODELS (Claude Fable 5, GPT-6 Astra), not engines; impressive demos pair them with asset-gen MCPs (Higgsfield) on browser-native stacks where the agent can screenshot/iterate. User redirected priority: **beautiful first, fit game to it**. Built `demo/living-painting/` — living-painting web demo: nano_banana_pro painterly dusk scene + parallax foliage, lantern flicker, fog, god rays, fireflies, fountain ripples, walkable watercolor reeble (new recraft gens). Executed in-session (subagent fallback) because the visual see→edit loop needs one context; headless Windows Chrome `--screenshot` gives the loop (`/mnt/c/Program Files/Google/Chrome/Application/chrome.exe --headless=new --screenshot=... --virtual-time-budget=4000 <url>`). **Awaiting user beauty verdict** — informs Unity-stay vs web-native decision.
+
+### Pipeline gotchas (spike)
+
+- `nano_banana_pro` accepts `--image-config` aspect ratios (16:9 → 1376x768) — unlike recraft/gpt_image25
+- recraft ignores compositional transparency asks ("transparent top three quarters") — salvage via band-crop + alpha ramp
+- recraft opaque-RGB returns: white subjects (fog) → luminance→alpha; sprites on white → PIL flood-fill bg removal
+- Existing reeble assets are photoreal/plush — clash with painterly scenes; generate fresh flat-watercolor sprites to match a scene's style
