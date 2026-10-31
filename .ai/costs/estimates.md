@@ -41,3 +41,12 @@ Pre-build cost projections created by the Architect before feature work begins.
 
 - ~12 tasks, order-of-magnitude 0.6-1M developer tokens + ~100k orchestrator tokens
 - Wall clock: ~half a day if batch runs behave; longer if Unity import/9P stalls appear
+
+### Feature: Visual spike — living-painting web demo (REEB-157 → REEB-158)
+
+- **Estimated tasks**: 1
+- **Executor**: orchestrator in-session (frontier model — visual iteration loop wants single-context see→edit; noted in REEB-157 constraints)
+- **Cost drivers**: image generation calls (~2-6 hero-tier RouteLLM calls, retry budget), HTML/JS write (~20-30k output tokens), browser-preview iterations (~3-6 rounds)
+- **Total estimated cost**: ~100-150k orchestrator tokens + a few RouteLLM hero-gen calls
+- **Time estimate**: 1-2 hours wall clock
+- **Worth it?**: yes — a failed spike still prices the "beautiful first" question before any M3/M5 or engine-port spend
